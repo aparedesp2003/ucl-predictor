@@ -103,12 +103,13 @@ def load_inputs(conn: Connection) -> SimInputs:
 
 
 def write_results(
-    conn: Connection, inputs: SimInputs, result: SimResult, n_sims: int, seed: int
-) -> int:
+    conn: Connection, inputs: SimInputs, result: SimResult, n_sims: int, seed: int,
+    sigma: float = 0.0,
+) -> int:  # fmt: skip
     sim_id = conn.scalar(
         insert(SimulationRun)
-        .values(model_run_id=inputs.model_run_id, n_sims=n_sims, seed=seed, as_of=inputs.as_of,
-                git_sha=git_sha())
+        .values(model_run_id=inputs.model_run_id, n_sims=n_sims, seed=seed, sigma=sigma,
+                as_of=inputs.as_of, git_sha=git_sha())
         .returning(SimulationRun.id)
     )  # fmt: skip
     hist = result.position_hist

@@ -1,7 +1,9 @@
 """Monte-Carlo simulation of the league phase and knockout phase (numpy, vectorised over sims).
 
-Scorelines come from the Elo-driven Poisson + Dixon-Coles model (``models.poisson``) with ratings
-frozen for the whole run. See ``simulate.rules`` for the competition rules and approximations.
+Scorelines come from the Elo-driven Poisson + Dixon-Coles model (``models.poisson``). Ratings do
+not update between rounds; optional per-season rating noise (``sigma``) models how much a team's
+strength may differ from its current Elo. See ``simulate.rules`` for the competition rules and
+approximations.
 """
 
 from collections.abc import Sequence
@@ -70,12 +72,20 @@ def _sample_matrix(cum: np.ndarray, u: np.ndarray) -> tuple[np.ndarray, np.ndarr
     return idx // _G, idx % _G
 
 
+def _team_ratings(ratings: np.ndarray, teams: np.ndarray) -> np.ndarray:
+    """Ratings of ``teams`` (one per sim): ``ratings`` is (36,) or per-sim (n_sims, 36)."""
+    if ratings.ndim == 1:
+        return ratings[teams]
+    return np.take_along_axis(ratings, teams[:, None], axis=1)[:, 0]
+
+
 def _play(
     home: np.ndarray, away: np.ndarray, ratings: np.ndarray, p: PoissonParams,
     rng: np.random.Generator, neutral: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # fmt: skip
     """90-minute goals for vectors of matches; also returns the rates for extra time."""
-    lam_h, lam_a = lambdas(ratings[home] - ratings[away], neutral, p)
+    diff = _team_ratings(ratings, home) - _team_ratings(ratings, away)
+    lam_h, lam_a = lambdas(diff, neutral, p)
     cum = scoreline_matrix(lam_h, lam_a, p.rho).reshape(len(home), -1).cumsum(axis=1)
     hg, ag = _sample_matrix(cum, rng.random(len(home)))
     return hg, ag, lam_h, lam_a
@@ -115,7 +125,10 @@ def league_table(
     fixtures: Sequence[Fixture], ratings: np.ndarray, p: PoissonParams, n_sims: int,
     rng: np.random.Generator,
 ) -> tuple[np.ndarray, np.ndarray]:  # fmt: skip
-    """(order, points): order[s, k] = team at position k + 1 in sim s; points (n_sims, 36)."""
+    """(order, points): order[s, k] = team at position k + 1 in sim s; points (n_sims, 36).
+
+    ``ratings`` is (36,) or per-sim (n_sims, 36).
+    """
     shape = (n_sims, N_TEAMS)
     pts, gf, ga, away_gf, wins, away_wins = (np.zeros(shape, dtype=np.int64) for _ in range(6))
     played = np.zeros((N_TEAMS, N_TEAMS), dtype=np.int64)
@@ -126,8 +139,10 @@ def league_table(
             hg = np.full(n_sims, f.home_goals)
             ag = np.full(n_sims, f.away_goals)
         else:
-            lam_h, lam_a = lambdas(ratings[f.home] - ratings[f.away], False, p)
-            cum = scoreline_matrix(lam_h, lam_a, p.rho).reshape(-1).cumsum()
+            # Per-sim ratings (n_sims, 36) give one score matrix per sim; frozen ones a single one.
+            lam_h, lam_a = lambdas(ratings[..., f.home] - ratings[..., f.away], False, p)
+            cum = scoreline_matrix(lam_h, lam_a, p.rho)
+            cum = cum.reshape(*cum.shape[:-2], -1).cumsum(axis=-1)
             hg, ag = _sample_matrix(cum, rng.random(n_sims))
         gf[:, f.home] += hg
         ga[:, f.home] += ag
@@ -157,13 +172,22 @@ def rank(
 
 def simulate(
     fixtures: Sequence[Fixture], ratings: Sequence[float], p: PoissonParams,
-    n_sims: int = 10_000, seed: int = 42,
+    n_sims: int = 10_000, seed: int = 42, sigma: float = 0.0,
 ) -> SimResult:  # fmt: skip
-    """Simulate the rest of the season ``n_sims`` times."""
+    """Simulate the rest of the season ``n_sims`` times.
+
+    ``sigma`` > 0 adds rating uncertainty: each simulated season draws one N(0, sigma) offset per
+    team, fixed for the whole season (league phase and knockouts). ``sigma`` = 0 keeps ratings
+    frozen and consumes no extra random numbers, so it reproduces the frozen-ratings output.
+    """
     rng = np.random.default_rng(seed)
     r = np.asarray(ratings, dtype=float)
     if r.shape != (N_TEAMS,):
         raise ValueError(f"expected {N_TEAMS} ratings, got {r.shape}")
+    if sigma < 0:
+        raise ValueError("sigma must be >= 0")
+    if sigma > 0:
+        r = r[None, :] + rng.normal(0.0, sigma, (n_sims, N_TEAMS))
     order, pts = league_table(fixtures, r, p, n_sims, rng)
 
     positions = np.empty_like(order)

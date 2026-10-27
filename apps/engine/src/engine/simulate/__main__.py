@@ -1,6 +1,6 @@
 """Season simulator CLI.
 
-uv run python -m engine.simulate run [--n 10000] [--seed 42]
+uv run python -m engine.simulate run [--n 10000] [--seed 42] [--sigma S]
 """
 
 import argparse
@@ -14,9 +14,10 @@ from engine.cli import print_table
 from engine.db import get_engine
 from engine.db.models import Team
 from engine.models.report import official_scheduled, print_prob_diff
-from engine.models.store import get_primary_model
+from engine.models.store import get_primary_model, latest_backtest_params, load_matches
 from engine.simulate.engine import SimResult, simulate
 from engine.simulate.store import SIM_MODEL, load_inputs, write_results
+from engine.simulate.uncertainty import SEASONS, estimate_sigma, rating_drift
 
 logger = logging.getLogger("engine.simulate")
 
@@ -42,11 +43,24 @@ def cmd_run(args: argparse.Namespace) -> int:
         primary = get_primary_model(conn)
         names = dict(conn.execute(select(Team.id, Team.name)).all())
         elo, shrink = official_scheduled(conn, "elo"), official_scheduled(conn, SIM_MODEL)
+        if args.sigma is None:
+            est = estimate_sigma(rating_drift(load_matches(conn), latest_backtest_params(conn)))
+    if args.sigma is None:
+        print_table(
+            f"Elo drift from 3rd group/league match to season end ({SEASONS[0]}..{SEASONS[1]})",
+            ("season", "teams", "std"),
+            [(s, n, f"{sd:.1f}") for s, (sd, n) in est.per_season.items()],
+        )
+        sigma = est.sigma
+        print(f"sigma = {sigma:.1f} Elo points (pooled, n = {est.n})")
+    else:
+        sigma = args.sigma
+        print(f"sigma = {sigma:.1f} Elo points (--sigma override)")
 
     p = inputs.params
     print(
         f"{inputs.season}: {len(inputs.fixtures) - inputs.n_remaining} league matches played,"
-        f" {inputs.n_remaining} to simulate; ratings frozen as of {inputs.as_of}"
+        f" {inputs.n_remaining} to simulate; ratings as of {inputs.as_of}"
     )
     print(
         f"scorelines from {SIM_MODEL} (predict run {inputs.model_run_id}):"
@@ -60,7 +74,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
 
     start = time.perf_counter()
-    res = simulate(inputs.fixtures, inputs.ratings, p, n_sims=args.n, seed=args.seed)
+    res = simulate(inputs.fixtures, inputs.ratings, p, n_sims=args.n, seed=args.seed, sigma=sigma)
     runtime = time.perf_counter() - start
     print(f"{args.n} simulations (seed {args.seed}) in {runtime:.2f} s")
 
@@ -88,7 +102,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     )  # fmt: skip
 
     with engine.begin() as conn:
-        sim_id = write_results(conn, inputs, res, args.n, args.seed)
+        sim_id = write_results(conn, inputs, res, args.n, args.seed, sigma)
     print(f"simulation_runs id {sim_id}")
     with engine.connect() as conn:
         print_prob_diff(conn, names, elo, shrink)
@@ -101,6 +115,10 @@ def main(argv: list[str] | None = None) -> int:
     run = sub.add_parser("run", help="simulate the rest of the season and store the results")
     run.add_argument("--n", type=int, default=10_000, help="number of simulations")
     run.add_argument("--seed", type=int, default=42)
+    run.add_argument(
+        "--sigma", type=float, default=None,
+        help="per-team rating noise (Elo points); default: estimated from history; 0 = frozen",
+    )  # fmt: skip
     run.set_defaults(func=cmd_run)
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")

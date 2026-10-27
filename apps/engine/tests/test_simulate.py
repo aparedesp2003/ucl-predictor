@@ -1,3 +1,4 @@
+import hashlib
 import time
 
 import numpy as np
@@ -113,3 +114,51 @@ def test_runtime_for_10k_sims():
     start = time.perf_counter()
     simulate(_all_remaining(), _ratings(), P, n_sims=10_000, seed=42)
     assert time.perf_counter() - start < 60
+
+
+def _fingerprint(res) -> tuple[str, str]:
+    reached = b"".join(
+        res.reached[k].astype("int64").tobytes() for k in ("r16", "qf", "sf", "final", "win")
+    )
+    return (
+        hashlib.sha256(res.position_counts.astype("int64").tobytes()).hexdigest()[:16],
+        hashlib.sha256(reached).hexdigest()[:16],
+    )
+
+
+# Output of the frozen-ratings simulator before rating uncertainty was added (n=500, seed=7).
+FROZEN_FINGERPRINT = ("de59818f49956b12", "605358fbe0d2b11b")
+
+
+def test_sigma_zero_reproduces_frozen_output_exactly():
+    res = simulate(_all_remaining(), _ratings(), P, n_sims=500, seed=7, sigma=0.0)
+    assert _fingerprint(res) == FROZEN_FINGERPRINT
+    assert _fingerprint(simulate(_all_remaining(), _ratings(), P, n_sims=500, seed=7)) == (
+        FROZEN_FINGERPRINT
+    )
+
+
+def test_sigma_keeps_invariants_exact_and_is_deterministic():
+    a = simulate(_all_remaining(), _ratings(), P, n_sims=1000, seed=5, sigma=40.0)
+    b = simulate(_all_remaining(), _ratings(), P, n_sims=1000, seed=5, sigma=40.0)
+    assert _fingerprint(a) == _fingerprint(b)
+    assert _fingerprint(a) != _fingerprint(
+        simulate(_all_remaining(), _ratings(), P, n_sims=1000, seed=5)
+    )
+    for key, total in (("win", 1), ("final", 2), ("sf", 4), ("qf", 8), ("r16", 16)):
+        assert a.prob(key).sum() == pytest.approx(total, abs=1e-12)
+    assert a.p_top8.sum() == pytest.approx(8, abs=1e-12)
+    assert a.p_out.sum() == pytest.approx(12, abs=1e-12)
+
+
+def test_sigma_spreads_outcomes_for_a_dominant_team():
+    r = np.full(N_TEAMS, 1500.0)
+    r[0] = 1800.0
+    frozen = simulate(_all_remaining(), r, P, n_sims=4000, seed=11)
+    noisy = simulate(_all_remaining(), r, P, n_sims=4000, seed=11, sigma=150.0)
+    assert noisy.prob("win")[0] < frozen.prob("win")[0]
+
+
+def test_negative_sigma_rejected():
+    with pytest.raises(ValueError):
+        simulate(_all_remaining(), _ratings(), P, n_sims=10, sigma=-1.0)

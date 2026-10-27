@@ -262,6 +262,7 @@ class SimulationRun(Base):
     model_run_id: Mapped[int] = mapped_column(ForeignKey("model_runs.id", ondelete="RESTRICT"))
     n_sims: Mapped[int] = mapped_column(Integer)
     seed: Mapped[int] = mapped_column(Integer)
+    sigma: Mapped[float] = mapped_column(Double, server_default="0")  # rating noise; 0 = frozen
     as_of: Mapped[date] = mapped_column(Date)  # last finished match included
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     git_sha: Mapped[str | None] = mapped_column(String(64))
