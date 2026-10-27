@@ -1,0 +1,24 @@
+= UEFA Champions League 2011/12
+
+# Trimmed from openfootball/champions-league 2011-12/cl.txt for parser tests.
+
+
+
+▪ Group A
+  Wed Sep 14 2011
+    20:45  Manchester City (ENG)   v SSC Napoli (ITA)         1-1 (0-0)
+  Tue Nov 22
+    20:45  SSC Napoli (ITA)        v Manchester City (ENG)    2-1 (1-1)
+
+
+▪ Round of 16
+  Tue Feb 21 2012
+    20:45  SSC Napoli (ITA)        v Chelsea FC (ENG)         3-1 (2-1)
+  Wed Mar 14
+    20:45  Chelsea FC (ENG)        v SSC Napoli (ITA)         4-1 a.e.t. (3-1, 1-0)
+           Real Madrid (ESP)       v CSKA Moskva (RUS)        4-1 (1-0)
+
+
+▪ Final
+  Sat May 19
+    20:45  Bayern München (GER)    v Chelsea FC (ENG)         3-4 pen. 1-1 a.e.t. (1-1, 0-0)

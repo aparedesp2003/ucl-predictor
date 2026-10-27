@@ -169,9 +169,7 @@ class Match(Base):
     home_pens: Mapped[int | None] = mapped_column(SmallInteger)
     away_pens: Mapped[int | None] = mapped_column(SmallInteger)
     neutral_venue: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class IngestRun(Base):
@@ -179,9 +177,7 @@ class IngestRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     source: Mapped[Source] = mapped_column(_enum(Source, "run_source"))
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[RunStatus] = mapped_column(_enum(RunStatus, "run_status"))
     rows_inserted: Mapped[int] = mapped_column(Integer, server_default="0")
