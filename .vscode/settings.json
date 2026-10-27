@@ -50,17 +50,5 @@
   },
   "tailwindCSS.classAttributes": ["class", "className"],
 
-  // ---------- Database (local Docker only) ----------
-  "sqltools.connections": [
-    {
-      "name": "ucl-local",
-      "driver": "PostgreSQL",
-      "server": "localhost",
-      "port": 5432,
-      "database": "ucl_predictor",
-      "username": "ucl",
-      "password": "ucl"
-    }
-  ],
   "python.terminal.useEnvFile": true
 }
