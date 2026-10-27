@@ -1,0 +1,28 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Env (any folder)
+.env
+.env.*
+!.env.example
+
+# Data
+data/raw/*.csv
+
+# OS
+.DS_Store
+Thumbs.db

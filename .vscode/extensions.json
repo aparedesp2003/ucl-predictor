@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-toolsai.jupyter",
+    "charliermarsh.ruff",
+    "tamasfe.even-better-toml",
+
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "yoavbls.pretty-ts-errors",
+
+    "ms-azuretools.vscode-docker",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "rangav.vscode-thunder-client",
+
+    "eamodio.gitlens",
+    "github.vscode-github-actions",
+    "usernamehw.errorlens"
+  ]
+}

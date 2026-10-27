@@ -1,0 +1,20 @@
+# Install once: uvx pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.3
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        files: ^apps/engine/
+      - id: ruff-format
+        files: ^apps/engine/
+
+  - repo: local
+    hooks:
+      # Uses the prettier installed in apps/web (run `pnpm install` first).
+      - id: prettier
+        name: prettier
+        language: system
+        entry: node apps/web/node_modules/prettier/bin/prettier.cjs --write --ignore-unknown
+        files: ^apps/web/
+        types: [text]
