@@ -37,12 +37,13 @@ class PostKickoffUpdateError(RuntimeError):
 def load_matches(conn: Connection) -> list[MatchRow]:
     """Finished and scheduled matches; goals are the 90-minute score (None unless finished)."""
     rows = conn.execute(
-        select(Match, Season.label)
+        select(Match.__table__, Season.label)
         .join(Season, Season.id == Match.season_id)
         .where(Match.status.in_([MatchStatus.FINISHED, MatchStatus.SCHEDULED]))
     ).all()
     out = []
-    for m, label in rows:
+    for m in rows:
+        label = m.label
         finished = m.status == MatchStatus.FINISHED
         if finished and (m.home_goals_90 is None or m.away_goals_90 is None):
             raise ValueError(f"finished match {m.id} has no 90-minute score")
