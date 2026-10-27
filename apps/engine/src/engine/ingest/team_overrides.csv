@@ -1,0 +1,21 @@
+source,alias,team_name,reason
+openfootball,Qarabağ Ağdam FK,Qarabağ FK,2025-26 cl.txt spelling; clq.txt and earlier seasons use Qarabağ FK
+openfootball,RB Salzburg,FC Red Bull Salzburg,short name 2019-23; full name from 2023-24
+openfootball,Union Saint-Gilloise,Royale Union Saint-Gilloise,short name 2024-25; full name 2025-26
+openfootball,Dinamo Zagreb,GNK Dinamo Zagreb,short name until 2023-24; full name from 2024-25
+openfootball,Paphos FC,Pafos FC,cl.txt vs clq.txt spelling in 2025-26 (same club)
+openfootball,Atlético Madrid,Club Atlético de Madrid,short name until 2022-23; football-data name
+openfootball,Real Sociedad,Real Sociedad de Fútbol,short name 2013-14; full name 2023-24
+openfootball,Olympique Marseille,Olympique de Marseille,old spelling until 2022-23
+openfootball,Bayer Leverkusen,Bayer 04 Leverkusen,short name until 2023-24; full name from 2024-25
+openfootball,AEK Athen,PAE AEK,German exonym 2018-19; football-data name
+openfootball,Olympiakos Piraeus,PAE Olympiakos SFP,old name until 2020-21; full name 2025-26
+openfootball,Atalanta,Atalanta BC,short name until 2021-22; full name from 2024-25
+openfootball,Lazio Roma,SS Lazio,short name 2020-21; full name 2023-24
+openfootball,PSV Eindhoven,PSV,old name until 2018-19; football-data name
+openfootball,SL Benfica,Sport Lisboa e Benfica,short name until 2022-23; full name from 2023-24
+openfootball,Sporting Braga,Sporting Clube de Braga,short name 2012-13; full name 2023-24
+openfootball,FC Steaua Bucureşti,FCSB,club renamed 2017; UEFA treats FCSB as the same club (coefficient history)
+openfootball,Crvena Zvezda,FK Crvena Zvezda,short name; full name used 2023-25 alongside it
+openfootball,Shakhtar Donetsk,FK Shakhtar Donetsk,short name until 2022-23; football-data name
+openfootball,AS Monaco FC,AS Monaco,source switched country code FRA -> MCO in 2024-25; bypasses country guard
