@@ -1,1 +1,3 @@
 * text=auto eol=lf
+   *.mako linguist-generated
+   apps/web/app/globals.css linguist-generated
