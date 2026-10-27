@@ -36,3 +36,28 @@ parameter chosen on a grid edge outward and re-searches until the choice is inte
 `team_ratings` and `predictions`, and prints the next matchday and the top 20 ratings. A prediction for a
 match that has kicked off is never changed; the `official_predictions` view returns, per match, the
 latest prediction created before kick-off.
+
+## Poisson model, calibration and primary model
+
+```sh
+uv run python -m engine.models poisson backtest   # compare candidates, set settings.primary_model
+uv run python -m engine.models predict            # primary model + poisson_shrink for scheduled matches
+```
+
+Candidates share the Elo walk-forward: `elo`, `poisson` (Elo-driven Poisson + Dixon-Coles, refitted
+each season on earlier seasons), `poisson_cal` (temperature scaling), `poisson_shrink` (rating slope
+scaled by `s`) and `blend` (mean of elo and poisson_cal). T and s are fitted on validation seasons
+(leave-one-season-out when scoring validation). The primary is the lowest validation log loss and must
+not lose to Elo on test log loss. `official_predictions` holds the latest pre-kick-off prediction per
+(model, match); `official_primary_predictions` keeps the model named in `settings.primary_model`.
+
+## Season simulator
+
+```sh
+uv run python -m engine.simulate run [--n 10000] [--seed 42]
+```
+
+Samples the remaining league-phase scorelines from the latest `poisson_shrink` predict run (ratings
+frozen), ranks the 36 teams with the 2026/27 tiebreakers, then plays the knockout bracket. Rules,
+sources and approximations are documented in `src/engine/simulate/rules.py`. Results go to
+`simulation_runs` / `team_simulation_results`.
