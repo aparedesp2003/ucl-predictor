@@ -5,6 +5,7 @@ import pytest
 from engine.db.models import Stage
 from engine.models.elo import (
     AWAY,
+    BASE_RATING,
     DRAW,
     HOME,
     EloParams,
@@ -79,11 +80,13 @@ def test_state_regresses_once_per_new_season():
     assert state.ratings[1] == 1505
 
 
-def test_new_team_rating_and_home_adv_in_diff():
-    state = EloState(EloParams(new_team_rating=1400, home_adv=60))
+def test_founding_teams_start_at_base_and_debutants_at_new_team_rating():
+    state = EloState(EloParams(new_team_rating=1400, home_adv=60, season_regression=0))
     assert state.pre_match(_m(1, "2020-21", date(2020, 10, 1), 1, 2)) == 60
     assert state.pre_match(_m(2, "2020-21", date(2020, 10, 1), 1, 2, neutral=True)) == 0
-    assert state.ratings == {1: 1400, 2: 1400}
+    assert state.ratings == {1: BASE_RATING, 2: BASE_RATING}
+    assert state.pre_match(_m(3, "2021-22", date(2021, 10, 1), 3, 1)) == 1400 + 60 - BASE_RATING
+    assert state.ratings[3] == 1400
 
 
 def test_sort_key_orders_by_date_kickoff_id():

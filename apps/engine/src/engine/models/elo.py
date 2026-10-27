@@ -3,6 +3,10 @@
 Ratings are zero-sum within a season. At the first match of each new season every rated team is
 pulled toward the mean rating by ``season_regression``. Matches are processed in
 ``(match_date, kickoff_utc, id)`` order, qualifiers included.
+
+Teams first seen in the first processed season start at ``BASE_RATING``; later debutants start at
+``new_team_rating``. (Seeding everyone at ``new_team_rating`` would only translate all ratings by a
+constant, leaving every prediction unchanged.)
 """
 
 from collections.abc import Iterable
@@ -15,6 +19,8 @@ from engine.db.models import Stage
 _MIN_KICKOFF = datetime.min.replace(tzinfo=UTC)
 
 HOME, DRAW, AWAY = 0, 1, 2
+
+BASE_RATING = 1500.0
 
 
 @dataclass(frozen=True)
@@ -123,14 +129,20 @@ class EloState:
     params: EloParams
     ratings: dict[int, float] = field(default_factory=dict)
     season: str | None = None
+    first_season: str | None = None
 
     def _rating(self, team_id: int) -> float:
-        return self.ratings.setdefault(team_id, self.params.new_team_rating)
+        if team_id not in self.ratings:
+            founding = self.season == self.first_season
+            self.ratings[team_id] = BASE_RATING if founding else self.params.new_team_rating
+        return self.ratings[team_id]
 
     def _enter_season(self, season: str) -> None:
         if season == self.season:
             return
-        if self.season is not None:
+        if self.season is None:
+            self.first_season = season
+        else:
             self.ratings = regress_to_mean(self.ratings, self.params.season_regression)
         self.season = season
 

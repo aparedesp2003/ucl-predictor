@@ -260,7 +260,9 @@ def _combos(grid: Grid) -> list[EloParams]:
     ]
 
 
-def grid_search(objective: Objective, grid: Grid = DEFAULT_GRID, max_rounds: int = 6) -> GridResult:
+def grid_search(
+    objective: Objective, grid: Grid = DEFAULT_GRID, max_rounds: int = 10
+) -> GridResult:
     """Minimise (log loss, RPS); extend edge dimensions outward and repeat until interior."""
     evaluated: dict[EloParams, tuple[float, float]] = {}
     grid = {k: list(v) for k, v in grid.items()}
