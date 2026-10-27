@@ -5,8 +5,10 @@ from enum import StrEnum
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
+    Double,
     Enum,
     ForeignKey,
     Index,
@@ -18,6 +20,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -183,3 +186,60 @@ class IngestRun(Base):
     rows_inserted: Mapped[int] = mapped_column(Integer, server_default="0")
     rows_updated: Mapped[int] = mapped_column(Integer, server_default="0")
     error: Mapped[str | None] = mapped_column(Text)
+
+
+class ModelRunKind(StrEnum):
+    BACKTEST = "backtest"
+    PREDICT = "predict"
+
+
+class ModelRun(Base):
+    __tablename__ = "model_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    model: Mapped[str] = mapped_column(String(32))  # "elo"
+    kind: Mapped[ModelRunKind] = mapped_column(_enum(ModelRunKind, "model_run_kind"))
+    version: Mapped[str] = mapped_column(String(32))
+    params: Mapped[dict] = mapped_column(JSONB)
+    train_through: Mapped[date | None] = mapped_column(Date)  # last finished match used
+    metrics: Mapped[dict | None] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    git_sha: Mapped[str | None] = mapped_column(String(64))
+
+
+class TeamRating(Base):
+    """Final rating per team after the run's last finished match."""
+
+    __tablename__ = "team_ratings"
+    __table_args__ = (UniqueConstraint("model_run_id", "team_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    model_run_id: Mapped[int] = mapped_column(ForeignKey("model_runs.id", ondelete="CASCADE"))
+    team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
+    rating: Mapped[float] = mapped_column(Double)
+    as_of_date: Mapped[date] = mapped_column(Date)
+
+
+class Prediction(Base):
+    """Pre-match H/D/A probabilities. Rows for kicked-off matches are never updated (see
+    ``engine.models.store``); the ``official_predictions`` view picks, per match, the latest row
+    created before kick-off.
+    """
+
+    __tablename__ = "predictions"
+    __table_args__ = (
+        UniqueConstraint("model_run_id", "match_id"),
+        CheckConstraint("abs(p_home + p_draw + p_away - 1) <= 1e-6", name="probs_sum_to_one"),
+        CheckConstraint(
+            "p_home BETWEEN 0 AND 1 AND p_draw BETWEEN 0 AND 1 AND p_away BETWEEN 0 AND 1",
+            name="probs_in_unit_interval",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    model_run_id: Mapped[int] = mapped_column(ForeignKey("model_runs.id", ondelete="RESTRICT"))
+    match_id: Mapped[int] = mapped_column(ForeignKey("matches.id"), index=True)
+    p_home: Mapped[float] = mapped_column(Double)
+    p_draw: Mapped[float] = mapped_column(Double)
+    p_away: Mapped[float] = mapped_column(Double)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
