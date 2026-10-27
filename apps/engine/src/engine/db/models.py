@@ -222,8 +222,8 @@ class TeamRating(Base):
 
 class Prediction(Base):
     """Pre-match H/D/A probabilities. Rows for kicked-off matches are never updated (see
-    ``engine.models.store``); the ``official_predictions`` view picks, per match, the latest row
-    created before kick-off.
+    ``engine.models.store``). The ``official_predictions`` view picks, per (model, match), the
+    latest row created before kick-off; ``official_primary_predictions`` keeps the primary model.
     """
 
     __tablename__ = "predictions"
@@ -243,3 +243,46 @@ class Prediction(Base):
     p_draw: Mapped[float] = mapped_column(Double)
     p_away: Mapped[float] = mapped_column(Double)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Setting(Base):
+    """Key/value settings. ``primary_model`` names the model whose predictions are official."""
+
+    __tablename__ = "settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SimulationRun(Base):
+    __tablename__ = "simulation_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    model_run_id: Mapped[int] = mapped_column(ForeignKey("model_runs.id", ondelete="RESTRICT"))
+    n_sims: Mapped[int] = mapped_column(Integer)
+    seed: Mapped[int] = mapped_column(Integer)
+    as_of: Mapped[date] = mapped_column(Date)  # last finished match included
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    git_sha: Mapped[str | None] = mapped_column(String(64))
+
+
+class TeamSimulationResult(Base):
+    __tablename__ = "team_simulation_results"
+    __table_args__ = (UniqueConstraint("simulation_run_id", "team_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    simulation_run_id: Mapped[int] = mapped_column(
+        ForeignKey("simulation_runs.id", ondelete="CASCADE")
+    )
+    team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
+    p_top8: Mapped[float] = mapped_column(Double)
+    p_playoff: Mapped[float] = mapped_column(Double)  # league positions 9-24
+    p_out: Mapped[float] = mapped_column(Double)  # league positions 25-36
+    p_r16: Mapped[float] = mapped_column(Double)
+    p_qf: Mapped[float] = mapped_column(Double)
+    p_sf: Mapped[float] = mapped_column(Double)
+    p_final: Mapped[float] = mapped_column(Double)
+    p_win: Mapped[float] = mapped_column(Double)
+    expected_points: Mapped[float] = mapped_column(Double)
+    position_hist: Mapped[list] = mapped_column(JSONB)  # P(position = k), k = 1..36
