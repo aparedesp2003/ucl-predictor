@@ -110,6 +110,7 @@ class Upcoming:
     ratings: dict[int, float]
     train_through: date | None
     predictions: list[tuple[MatchRow, float, Probs]]
+    history: list[Pred]  # pre-match diffs of every finished match, for fitting other models
 
 
 def predict_upcoming(matches: Sequence[MatchRow], params: EloParams) -> Upcoming:
@@ -131,7 +132,7 @@ def predict_upcoming(matches: Sequence[MatchRow], params: EloParams) -> Upcoming
         diff = state.pre_match(m)
         p = models[m.season].predict_proba([diff])[0]
         out.append((m, diff, (float(p[0]), float(p[1]), float(p[2]))))
-    return Upcoming(ratings, train_through, out)
+    return Upcoming(ratings, train_through, out, preds)
 
 
 def _arrays(preds: Sequence[Pred], model: str) -> tuple[np.ndarray, np.ndarray]:
