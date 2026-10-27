@@ -21,7 +21,8 @@ __pycache__/
 !.env.example
 
 # Data
-data/raw/*.csv
+data/raw/**
+!data/raw/.gitkeep
 
 # OS
 .DS_Store

@@ -18,6 +18,7 @@ dependencies = [
     "scikit-learn>=1.9.1",
     "scipy>=1.18.1",
     "sqlalchemy>=2.1.6",
+    "tzdata>=2026.5",
     "uvicorn[standard]>=0.54.0",
 ]
 
