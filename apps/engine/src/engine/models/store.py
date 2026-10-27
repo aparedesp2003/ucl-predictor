@@ -18,6 +18,7 @@ from engine.db.models import (
     ModelRunKind,
     Prediction,
     Season,
+    Setting,
     TeamRating,
 )
 from engine.models.elo import EloParams, MatchRow
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 MODEL = "elo"
 MODEL_VERSION = "1"
+PRIMARY_MODEL_KEY = "primary_model"
 
 Probs = tuple[float, float, float]
 
@@ -81,17 +83,18 @@ def git_sha() -> str | None:
 def create_model_run(
     conn: Connection,
     kind: ModelRunKind,
-    params: EloParams,
+    params: EloParams | dict,
     train_through: date | None,
     metrics: dict | None,
+    model: str = MODEL,
 ) -> int:
     return conn.scalar(
         insert(ModelRun)
         .values(
-            model=MODEL,
+            model=model,
             kind=kind,
             version=MODEL_VERSION,
-            params=params.to_dict(),
+            params=params.to_dict() if isinstance(params, EloParams) else params,
             train_through=train_through,
             metrics=metrics,
             git_sha=git_sha(),
@@ -108,6 +111,30 @@ def latest_backtest_params(conn: Connection) -> EloParams | None:
         .limit(1)
     )
     return EloParams.from_dict(params) if params else None
+
+
+def latest_run(conn: Connection, model: str, kind: ModelRunKind) -> tuple[int, dict] | None:
+    """(id, params) of the newest run of ``model`` and ``kind``."""
+    row = conn.execute(
+        select(ModelRun.id, ModelRun.params)
+        .where(ModelRun.model == model, ModelRun.kind == kind)
+        .order_by(ModelRun.id.desc())
+        .limit(1)
+    ).first()
+    return (row.id, row.params) if row else None
+
+
+def get_primary_model(conn: Connection) -> str:
+    return conn.scalar(select(Setting.value).where(Setting.key == PRIMARY_MODEL_KEY)) or MODEL
+
+
+def set_primary_model(conn: Connection, model: str) -> None:
+    stmt = insert(Setting).values(key=PRIMARY_MODEL_KEY, value=model)
+    conn.execute(
+        stmt.on_conflict_do_update(
+            index_elements=["key"], set_={"value": stmt.excluded.value, "updated_at": func.now()}
+        )
+    )
 
 
 def write_team_ratings(

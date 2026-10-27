@@ -8,6 +8,7 @@ from engine.evaluate.candidates import (
     Frame,
     candidate_probs,
     choose_primary,
+    compare_probs,
     fit_calibration,
 )
 from engine.models import poisson
@@ -101,3 +102,12 @@ def test_choose_primary_and_gate():
     assert choose_primary(val, good) == ("poisson_cal", "poisson_cal", True)
     bad = _scores({c: 0.95 for c in CANDIDATES} | {"poisson_cal": 0.96})
     assert choose_primary(val, bad) == ("poisson_cal", "elo", False)
+
+
+def test_compare_probs_reports_mean_max_and_flags():
+    a = {1: (0.5, 0.3, 0.2), 2: (0.2, 0.3, 0.5), 3: (0.4, 0.3, 0.3)}
+    b = {1: (0.52, 0.29, 0.19), 2: (0.28, 0.27, 0.45), 4: (0.3, 0.3, 0.4)}
+    d = compare_probs(a, b)
+    assert d.max_abs == pytest.approx(0.08)
+    assert d.mean_abs == pytest.approx((0.02 + 0.01 + 0.01 + 0.08 + 0.03 + 0.05) / 6)
+    assert [i for i, _, _ in d.flagged] == [2]

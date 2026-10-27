@@ -15,16 +15,16 @@ seasons; validation predictions use a leave-one-season-out fit (the season being
 out), so choosing the primary by validation log loss is not in-sample.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 import numpy as np
 
-from engine.evaluate.backtest import TEST, VALIDATION, Pred, in_range, is_main
+from engine.evaluate.backtest import TEST, VALIDATION, Pred, Upcoming, in_range, is_main
 from engine.evaluate.calibrate import fit_scalar, fit_temperature, temperature_scale
 from engine.evaluate.metrics import calibration_table, log_loss, summary
 from engine.models import poisson
-from engine.models.elo import EloParams
+from engine.models.elo import EloParams, MatchRow
 from engine.models.poisson import PoissonParams
 
 CANDIDATES = ("elo", "poisson", "poisson_cal", "poisson_shrink", "blend")
@@ -202,3 +202,63 @@ def choose_primary(validation: Scores, test: Scores) -> tuple[str, str, bool]:
     chosen = min(CANDIDATES, key=lambda c: (val[c]["log_loss"], val[c]["rps"]))
     ok = test["overall"][chosen]["log_loss"] <= test["overall"]["elo"]["log_loss"]
     return chosen, chosen if ok else "elo", ok
+
+
+@dataclass
+class ScheduledProbs:
+    matches: list[MatchRow]
+    probs: dict[str, np.ndarray]  # candidate -> (n, 3)
+    fits: dict[str, PoissonParams]  # season -> Poisson fit (before shrinking) used for it
+
+
+def predict_scheduled(
+    up: Upcoming, params: EloParams, temperature: float, shrink: float
+) -> ScheduledProbs:
+    """Every candidate's probabilities for the unfinished matches in ``up``.
+
+    The Poisson model for a season is fitted on finished matches of earlier seasons, as in the
+    backtest; T and s come from the latest Poisson backtest.
+    """
+    matches = [m for m, _, _ in up.predictions]
+    fits = {
+        s: fit_poisson([p for p in up.history if p.match.season < s], params)
+        for s in sorted({m.season for m in matches})
+    }
+    diff_raw = np.array([d - (0.0 if m.neutral else params.home_adv) for m, d, _ in up.predictions])
+    neutral = np.array([m.neutral for m in matches], dtype=bool)
+    raw, shrunk = np.empty((len(matches), 3)), np.empty((len(matches), 3))
+    for season, fit in fits.items():
+        idx = np.array([m.season == season for m in matches])
+        raw[idx] = poisson.predict_proba(diff_raw[idx], neutral[idx], fit)
+        shrunk[idx] = poisson.predict_proba(diff_raw[idx], neutral[idx], fit.shrunk(shrink))
+    elo = np.array([p for _, _, p in up.predictions], dtype=float).reshape(-1, 3)
+    cal = temperature_scale(raw, temperature)
+    probs = {
+        "elo": elo,
+        "poisson": raw,
+        "poisson_cal": cal,
+        "poisson_shrink": shrunk,
+        "blend": (elo + cal) / 2,
+    }
+    return ScheduledProbs(matches, probs, fits)
+
+
+@dataclass
+class ProbDiff:
+    mean_abs: float  # over all matches and the three outcomes
+    max_abs: float
+    flagged: list[tuple[int, np.ndarray, np.ndarray]]  # (match id, a, b) with any |a - b| > tol
+
+
+def compare_probs(
+    a: Mapping[int, Sequence[float]], b: Mapping[int, Sequence[float]], tol: float = 0.05
+) -> ProbDiff:
+    """Absolute H/D/A differences between two models on the matches both predicted."""
+    ids = sorted(set(a) & set(b))
+    if not ids:
+        return ProbDiff(float("nan"), float("nan"), [])
+    pa = np.array([a[i] for i in ids], dtype=float)
+    pb = np.array([b[i] for i in ids], dtype=float)
+    diff = np.abs(pa - pb)
+    flagged = [(i, pa[k], pb[k]) for k, i in enumerate(ids) if diff[k].max() > tol]
+    return ProbDiff(float(diff.mean()), float(diff.max()), flagged)
