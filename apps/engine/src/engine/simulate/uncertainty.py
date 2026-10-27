@@ -6,7 +6,7 @@ uncertain those ratings are for the rest of the season. Both ratings are taken w
 the regression applied at the next season's start is excluded.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 import numpy as np
@@ -57,3 +57,31 @@ def estimate_sigma(drift: dict[str, list[float]]) -> SigmaEstimate:
         n=len(pooled),
         per_season={s: (float(np.std(v, ddof=1)), len(v)) for s, v in sorted(drift.items())},
     )
+
+
+MIN_SAME_FORMAT_SEASONS = 2
+
+
+@dataclass(frozen=True)
+class SigmaChoice:
+    sigma: float
+    basis: str
+    seasons: list[str]  # seasons whose drift the sigma is computed from
+    pooled: SigmaEstimate  # all seasons before the target, for reference
+
+
+def default_sigma(
+    drift: dict[str, list[float]], formats: Mapping[str, str], target_season: str,
+    min_seasons: int = MIN_SAME_FORMAT_SEASONS,
+) -> SigmaChoice:  # fmt: skip
+    """Sigma from earlier seasons with the target season's format (group stage vs league phase:
+    different number of matches left after matchday 3), or from all earlier seasons when fewer
+    than ``min_seasons`` share the format."""
+    prior = {s: v for s, v in drift.items() if s < target_season}
+    pooled = estimate_sigma(prior)
+    fmt = formats[target_season]
+    same = {s: v for s, v in prior.items() if formats.get(s) == fmt}
+    if len(same) >= min_seasons:
+        return SigmaChoice(estimate_sigma(same).sigma, f"{fmt} seasons", sorted(same), pooled)
+    basis = f"pooled (only {len(same)} earlier {fmt} season(s))"
+    return SigmaChoice(pooled.sigma, basis, sorted(prior), pooled)

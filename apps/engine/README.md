@@ -59,5 +59,8 @@ uv run python -m engine.simulate run [--n 10000] [--seed 42]
 
 Samples the remaining league-phase scorelines from the latest `poisson_shrink` predict run (ratings
 frozen), ranks the 36 teams with the 2026/27 tiebreakers, then plays the knockout bracket. Rules,
-sources and approximations are documented in `src/engine/simulate/rules.py`. Results go to
+sources and approximations are documented in `src/engine/simulate/rules.py`. Each simulated season
+adds an N(0, sigma) offset to every team's rating; by default sigma is the spread of Elo changes from
+matchday 3 to season end in earlier seasons of the same format (pooled over all seasons if fewer than
+two exist). `--sigma 0` freezes ratings. Results go to
 `simulation_runs` / `team_simulation_results`.

@@ -5,7 +5,7 @@ import pytest
 
 from engine.db.models import Stage
 from engine.models.elo import EloParams, EloState, MatchRow
-from engine.simulate.uncertainty import estimate_sigma, rating_drift
+from engine.simulate.uncertainty import default_sigma, estimate_sigma, rating_drift
 
 PARAMS = EloParams(k=20, home_adv=0, season_regression=0.5, use_goal_diff=False)
 
@@ -44,3 +44,23 @@ def test_estimate_sigma_pools_and_reports_per_season():
     assert est.n == 5
     assert est.sigma == pytest.approx(np.std([1, -1, 3, 0, 2], ddof=1))
     assert est.per_season["b"] == (pytest.approx(np.std([0, 2], ddof=1)), 2)
+
+
+DRIFT = {"2021-22": [10.0, -10.0], "2022-23": [20.0, -20.0], "2024-25": [40.0, -40.0],
+         "2025-26": [50.0, -50.0], "2026-27": [500.0, -500.0]}  # fmt: skip
+FORMATS = {"2021-22": "group_stage", "2022-23": "group_stage", "2024-25": "league_phase",
+           "2025-26": "league_phase", "2026-27": "league_phase"}  # fmt: skip
+
+
+def test_default_sigma_uses_earlier_seasons_of_the_same_format():
+    choice = default_sigma(DRIFT, FORMATS, "2026-27")
+    assert choice.seasons == ["2024-25", "2025-26"]  # the target season itself is excluded
+    assert choice.sigma == pytest.approx(np.std([40, -40, 50, -50], ddof=1))
+    assert choice.pooled.n == 8
+
+
+def test_default_sigma_falls_back_to_pooled_with_fewer_than_two_seasons():
+    choice = default_sigma(DRIFT, FORMATS, "2025-26")  # only 2024-25 is an earlier league phase
+    assert choice.basis.startswith("pooled")
+    assert choice.seasons == ["2021-22", "2022-23", "2024-25"]
+    assert choice.sigma == pytest.approx(np.std([10, -10, 20, -20, 40, -40], ddof=1))

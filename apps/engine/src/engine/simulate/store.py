@@ -102,6 +102,10 @@ def load_inputs(conn: Connection) -> SimInputs:
     )
 
 
+def season_formats(conn: Connection) -> dict[str, str]:
+    return {label: fmt for label, fmt in conn.execute(select(Season.label, Season.format))}
+
+
 def write_results(
     conn: Connection, inputs: SimInputs, result: SimResult, n_sims: int, seed: int,
     sigma: float = 0.0,

@@ -16,8 +16,8 @@ from engine.db.models import Team
 from engine.models.report import official_scheduled, print_prob_diff
 from engine.models.store import get_primary_model, latest_backtest_params, load_matches
 from engine.simulate.engine import SimResult, simulate
-from engine.simulate.store import SIM_MODEL, load_inputs, write_results
-from engine.simulate.uncertainty import SEASONS, estimate_sigma, rating_drift
+from engine.simulate.store import SIM_MODEL, load_inputs, season_formats, write_results
+from engine.simulate.uncertainty import SEASONS, default_sigma, rating_drift
 
 logger = logging.getLogger("engine.simulate")
 
@@ -44,15 +44,23 @@ def cmd_run(args: argparse.Namespace) -> int:
         names = dict(conn.execute(select(Team.id, Team.name)).all())
         elo, shrink = official_scheduled(conn, "elo"), official_scheduled(conn, SIM_MODEL)
         if args.sigma is None:
-            est = estimate_sigma(rating_drift(load_matches(conn), latest_backtest_params(conn)))
+            drift = rating_drift(load_matches(conn), latest_backtest_params(conn))
+            formats = season_formats(conn)
     if args.sigma is None:
+        choice = default_sigma(drift, formats, inputs.season)
         print_table(
             f"Elo drift from 3rd group/league match to season end ({SEASONS[0]}..{SEASONS[1]})",
-            ("season", "teams", "std"),
-            [(s, n, f"{sd:.1f}") for s, (sd, n) in est.per_season.items()],
+            ("season", "format", "teams", "std", "used"),
+            [
+                (s, formats[s], n, f"{sd:.1f}", "*" if s in choice.seasons else "")
+                for s, (sd, n) in choice.pooled.per_season.items()
+            ],
         )
-        sigma = est.sigma
-        print(f"sigma = {sigma:.1f} Elo points (pooled, n = {est.n})")
+        sigma = choice.sigma
+        print(
+            f"sigma = {sigma:.1f} Elo points from {choice.basis} ({inputs.season} is"
+            f" {formats[inputs.season]}); pooled over all seasons = {choice.pooled.sigma:.1f}"
+        )
     else:
         sigma = args.sigma
         print(f"sigma = {sigma:.1f} Elo points (--sigma override)")
@@ -117,7 +125,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--seed", type=int, default=42)
     run.add_argument(
         "--sigma", type=float, default=None,
-        help="per-team rating noise (Elo points); default: estimated from history; 0 = frozen",
+        help="per-team rating noise in Elo points (default: estimated from earlier seasons of"
+        " the same format; 0 = frozen ratings)",
     )  # fmt: skip
     run.set_defaults(func=cmd_run)
     args = parser.parse_args(argv)
