@@ -11,7 +11,7 @@ import logging
 import sys
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import Engine, select
 
 from engine.cli import print_table
 from engine.db import get_engine
@@ -291,8 +291,9 @@ def cmd_poisson_backtest(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_predict_primary(args: argparse.Namespace) -> int:
-    engine = get_engine()
+def predict_primary(engine: Engine) -> dict[str, int]:
+    """Predict scheduled matches with the primary model and poisson_shrink; returns their predict
+    run ids by model. Raises RuntimeError if the backtests it depends on have not been run."""
     with engine.connect() as conn:
         matches = load_matches(conn)
         params = latest_backtest_params(conn)
@@ -300,13 +301,13 @@ def cmd_predict_primary(args: argparse.Namespace) -> int:
         primary = get_primary_model(conn)
         names = dict(conn.execute(select(Team.id, Team.name)).all())
     if params is None or poisson_run is None:
-        sys.exit("run `elo backtest --grid` and `poisson backtest` first")
+        raise RuntimeError("run `elo backtest --grid` and `poisson backtest` first")
     temperature, shrink = poisson_run[1]["temperature"], poisson_run[1]["shrink"]
     print(f"primary model: {primary}; also tracking poisson_shrink (s = {shrink:.4f})")
 
     up = predict_upcoming(matches, params)
     if up.train_through is None:
-        sys.exit("no finished matches to fit on")
+        raise RuntimeError("no finished matches to fit on")
     sched = predict_scheduled(up, params, temperature, shrink)
     now = datetime.now(UTC)
     run_params = {
@@ -324,9 +325,10 @@ def cmd_predict_primary(args: argparse.Namespace) -> int:
         }
         for model in sched.probs
     }
+    run_ids: dict[str, int] = {}
     with engine.begin() as conn:
         for model in dict.fromkeys([primary, "poisson_shrink"]):
-            run_id = create_model_run(
+            run_id = run_ids[model] = create_model_run(
                 conn, ModelRunKind.PREDICT, run_params, up.train_through, counts, model=model
             )
             write_team_ratings(conn, run_id, up.ratings, up.train_through)
@@ -360,6 +362,14 @@ def cmd_predict_primary(args: argparse.Namespace) -> int:
     )
     with engine.connect() as conn:
         print_prob_diff(conn, names, probs["elo"], probs["poisson_shrink"])
+    return run_ids
+
+
+def cmd_predict_primary(args: argparse.Namespace) -> int:
+    try:
+        predict_primary(get_engine())
+    except RuntimeError as exc:
+        sys.exit(str(exc))
     return 0
 
 

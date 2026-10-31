@@ -64,3 +64,28 @@ adds an N(0, sigma) offset to every team's rating; by default sigma is the sprea
 matchday 3 to season end in earlier seasons of the same format (pooled over all seasons if fewer than
 two exist). `--sigma 0` freezes ratings. Results go to
 `simulation_runs` / `team_simulation_results`.
+
+## Matchday pipeline
+
+```sh
+uv run python -m engine.pipeline run [--force] [--dry-run]   # ingest, then predict + simulate if needed
+uv run python -m engine.pipeline summary [--run-id N]        # markdown report of a run
+```
+
+`run` takes a Postgres advisory lock (a second concurrent run records `locked` and exits 0), ingests
+football-data, and compares the payload with the stored matches (new fixtures, newly finished, score /
+status / kick-off changes). If the loader inserted or updated any match, or any match's `updated_at` is
+newer than the watermark stored by the last `ok` run (before the first one: the latest simulation), it
+runs `models predict` (primary + poisson_shrink) and `simulate run` with the default sigma; otherwise it
+records `skipped`. Each invocation is a `pipeline_runs` row (`running` until it finishes; a failed step
+is `failed` with the error and a non-zero exit). `--dry-run` fetches and reports what would change
+without writing anything (no ingest run, no raw cache file). `predictions.created_at` and
+`model_runs.created_at` always come from the database clock (see `tests/test_created_at.py`).
+
+Accuracy views: `prediction_scores` (one row per model and finished match with an official
+pre-kick-off prediction: outcome from the 90-minute score, log loss, RPS, Brier) and `model_scoreboard`
+(per model and season: n, means, accuracy, and the same for a uniform 1/3 forecast on those matches).
+
+`.github/workflows/matchday-pipeline.yml` runs daily at 06:15 UTC and on demand (`force` input), with
+`DATABASE_URL` and `FOOTBALL_DATA_TOKEN` from repository secrets; it applies pending migrations
+(upgrade only) and writes the run's summary to the job page.

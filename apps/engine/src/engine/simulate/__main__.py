@@ -8,7 +8,7 @@ import logging
 import sys
 import time
 
-from sqlalchemy import select
+from sqlalchemy import Engine, select
 
 from engine.cli import print_table
 from engine.db import get_engine
@@ -20,6 +20,9 @@ from engine.simulate.store import SIM_MODEL, load_inputs, season_formats, write_
 from engine.simulate.uncertainty import SEASONS, default_sigma, rating_drift
 
 logger = logging.getLogger("engine.simulate")
+
+DEFAULT_N = 10_000
+DEFAULT_SEED = 42
 
 
 def invariants(res: SimResult) -> list[tuple[str, float, float]]:
@@ -36,17 +39,20 @@ def invariants(res: SimResult) -> list[tuple[str, float, float]]:
     ]
 
 
-def cmd_run(args: argparse.Namespace) -> int:
-    engine = get_engine()
+def run_simulation(
+    engine: Engine, n: int = DEFAULT_N, seed: int = DEFAULT_SEED, sigma: float | None = None
+) -> tuple[int, bool]:
+    """Simulate the rest of the season and store it; returns (simulation_runs id, invariants ok).
+    ``sigma`` None estimates it from earlier seasons of the same format."""
     with engine.connect() as conn:
         inputs = load_inputs(conn)
         primary = get_primary_model(conn)
         names = dict(conn.execute(select(Team.id, Team.name)).all())
         elo, shrink = official_scheduled(conn, "elo"), official_scheduled(conn, SIM_MODEL)
-        if args.sigma is None:
+        if sigma is None:
             drift = rating_drift(load_matches(conn), latest_backtest_params(conn))
             formats = season_formats(conn)
-    if args.sigma is None:
+    if sigma is None:
         choice = default_sigma(drift, formats, inputs.season)
         print_table(
             f"Elo drift from 3rd group/league match to season end ({SEASONS[0]}..{SEASONS[1]})",
@@ -62,7 +68,6 @@ def cmd_run(args: argparse.Namespace) -> int:
             f" {formats[inputs.season]}); pooled over all seasons = {choice.pooled.sigma:.1f}"
         )
     else:
-        sigma = args.sigma
         print(f"sigma = {sigma:.1f} Elo points (--sigma override)")
 
     p = inputs.params
@@ -82,9 +87,9 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
 
     start = time.perf_counter()
-    res = simulate(inputs.fixtures, inputs.ratings, p, n_sims=args.n, seed=args.seed, sigma=sigma)
+    res = simulate(inputs.fixtures, inputs.ratings, p, n_sims=n, seed=seed, sigma=sigma)
     runtime = time.perf_counter() - start
-    print(f"{args.n} simulations (seed {args.seed}) in {runtime:.2f} s")
+    print(f"{n} simulations (seed {seed}) in {runtime:.2f} s")
 
     checks = invariants(res)
     print_table(
@@ -110,19 +115,24 @@ def cmd_run(args: argparse.Namespace) -> int:
     )  # fmt: skip
 
     with engine.begin() as conn:
-        sim_id = write_results(conn, inputs, res, args.n, args.seed, sigma)
+        sim_id = write_results(conn, inputs, res, n, seed, sigma)
     print(f"simulation_runs id {sim_id}")
     with engine.connect() as conn:
         print_prob_diff(conn, names, elo, shrink)
-    return 0 if all(abs(s - e) < 1e-9 for _, s, e in checks) else 1
+    return sim_id, all(abs(s - e) < 1e-9 for _, s, e in checks)
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    _, ok = run_simulation(get_engine(), args.n, args.seed, args.sigma)
+    return 0 if ok else 1
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m engine.simulate")
     sub = parser.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="simulate the rest of the season and store the results")
-    run.add_argument("--n", type=int, default=10_000, help="number of simulations")
-    run.add_argument("--seed", type=int, default=42)
+    run.add_argument("--n", type=int, default=DEFAULT_N, help="number of simulations")
+    run.add_argument("--seed", type=int, default=DEFAULT_SEED)
     run.add_argument(
         "--sigma", type=float, default=None,
         help="per-team rating noise in Elo points (default: estimated from earlier seasons of"

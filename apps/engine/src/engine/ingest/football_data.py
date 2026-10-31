@@ -76,13 +76,15 @@ class FootballDataClient:
         raise AssertionError("unreachable")
 
 
-def fetch(token: str) -> dict[str, Any]:
-    """Fetch the whole current CL season (matches + teams) and cache the raw JSON by date."""
+def fetch(token: str, cache: bool = True) -> dict[str, Any]:
+    """Fetch the whole current CL season (matches + teams); ``cache`` keeps the raw JSON by date."""
     with FootballDataClient(token) as client:
         payload = {
             "matches": client.get("/competitions/CL/matches"),
             "teams": client.get("/competitions/CL/teams"),
         }
+    if not cache:
+        return payload
     path = raw_path("football_data", f"{date.today().isoformat()}.json")
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
     logger.info("cached %s", path)

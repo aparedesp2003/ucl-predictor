@@ -20,7 +20,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -287,3 +287,35 @@ class TeamSimulationResult(Base):
     p_win: Mapped[float] = mapped_column(Double)
     expected_points: Mapped[float] = mapped_column(Double)
     position_hist: Mapped[list] = mapped_column(JSONB)  # P(position = k), k = 1..36
+
+
+class PipelineTrigger(StrEnum):
+    SCHEDULE = "schedule"
+    MANUAL = "manual"
+    LOCAL = "local"
+
+
+class PipelineStatus(StrEnum):
+    RUNNING = "running"  # in progress, or killed before it could record an outcome
+    OK = "ok"
+    SKIPPED = "skipped"  # nothing changed since the last ok run
+    LOCKED = "locked"  # another run held the advisory lock
+    FAILED = "failed"
+
+
+class PipelineRun(Base):
+    """One matchday-pipeline invocation (``python -m engine.pipeline run``)."""
+
+    __tablename__ = "pipeline_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    trigger: Mapped[PipelineTrigger] = mapped_column(_enum(PipelineTrigger, "pipeline_trigger"))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[PipelineStatus] = mapped_column(_enum(PipelineStatus, "pipeline_status"))
+    changed: Mapped[bool | None] = mapped_column(Boolean)
+    ingest_run_id: Mapped[int | None] = mapped_column(ForeignKey("ingest_runs.id"))
+    model_run_ids: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
+    simulation_run_id: Mapped[int | None] = mapped_column(ForeignKey("simulation_runs.id"))
+    summary: Mapped[dict | None] = mapped_column(JSONB)
+    error: Mapped[str | None] = mapped_column(Text)
