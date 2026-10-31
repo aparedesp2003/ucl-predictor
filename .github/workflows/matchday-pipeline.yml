@@ -1,0 +1,63 @@
+name: Matchday pipeline
+
+on:
+  schedule:
+    - cron: "15 6 * * *" # 06:15 UTC daily, after the previous evening's matches are final
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Predict and simulate even if nothing changed
+        type: boolean
+        default: false
+
+concurrency:
+  group: matchday-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/engine
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --locked
+
+      # Forward-only: never downgrade or stamp from CI.
+      - name: Migrate database
+        run: uv run alembic upgrade head
+
+      - name: Run pipeline
+        id: pipeline
+        env:
+          TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          args=(--trigger "$TRIGGER")
+          if [ "$FORCE" = "true" ]; then args+=(--force); fi
+          uv run python -m engine.pipeline run "${args[@]}"
+
+      - name: Job summary
+        if: always() && steps.pipeline.outputs.run_id != ''
+        env:
+          RUN_ID: ${{ steps.pipeline.outputs.run_id }}
+        run: uv run python -m engine.pipeline summary --run-id "$RUN_ID" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Job summary (no run recorded)
+        if: failure() && steps.pipeline.outputs.run_id == ''
+        run: |
+          echo "## Matchday pipeline: failed before a pipeline_runs row was recorded" >> "$GITHUB_STEP_SUMMARY"
+          echo "See the step logs (setup, migration or database connection)." >> "$GITHUB_STEP_SUMMARY"
