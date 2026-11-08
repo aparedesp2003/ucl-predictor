@@ -219,7 +219,7 @@ export async function TitleRace() {
                 <td className="hidden py-2.5 sm:table-cell" aria-hidden>
                   <div className="h-2 rounded-[1px] bg-rowline">
                     <div
-                      className="h-full rounded-[1px]"
+                      className="h-full rounded-[1px] ring-1 ring-white/18 ring-inset"
                       style={{
                         width: `${(t.pWin / leaderWin) * 100}%`,
                         backgroundColor: teamColors(t.team).primary,
