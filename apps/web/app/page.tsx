@@ -115,8 +115,9 @@ export default function HomePage() {
                 result is in.
               </p>
               <p>
-                The remaining fixtures are then played out thousands of times to
-                estimate each club&apos;s chance of the last 16 and the title.
+                The remaining fixtures are then simulated from those
+                probabilities, season after season, to estimate each
+                club&apos;s chance of the last 16 and the title.
               </p>
             </div>
           </section>
