@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -5,8 +8,11 @@ import {
   currentMatchday,
   favoured,
   formatPct,
+  formatSimPct,
   improvementOverGuessing,
   isHit,
+  roundLabel,
+  sortRows,
   titleHeadline,
 } from "./derive";
 import type { MatchRow, TitleOdds } from "./types";
@@ -131,5 +137,95 @@ describe("numbers", () => {
     expect(
       improvementOverGuessing({ logLoss: 0.99, uniformLogLoss: 1.1 }),
     ).toBeCloseTo(0.1);
+  });
+});
+
+// The same cases drive the engine's integration test of web_prediction_scores.hit, so the Matches
+// page and the Accuracy page cannot disagree on what a hit is.
+type HitCase = {
+  case: string;
+  p_home: number;
+  p_draw: number;
+  p_away: number;
+  home_goals: number;
+  away_goals: number;
+  hit: boolean;
+};
+const HIT_CASES: HitCase[] = JSON.parse(
+  readFileSync(
+    path.resolve(__dirname, "../../../engine/tests/fixtures/hit_cases.json"),
+    "utf-8",
+  ),
+);
+
+describe("isHit agrees with web_prediction_scores.hit", () => {
+  it("covers a draw-favoured match and every tie", () => {
+    const names = HIT_CASES.map((c) => c.case).join(" | ");
+    expect(names).toContain("draw favoured");
+    expect(names).toContain("tie");
+  });
+
+  it.each(HIT_CASES)("$case", (c) => {
+    const m = match({
+      status: "FINISHED",
+      homeGoals: c.home_goals,
+      awayGoals: c.away_goals,
+      prediction: pred(c.p_home, c.p_draw, c.p_away),
+    });
+    expect(isHit(m)).toBe(c.hit);
+  });
+});
+
+describe("formatSimPct", () => {
+  it("never shows 0% or 100%", () => {
+    expect(formatSimPct(0)).toBe("<1%");
+    expect(formatSimPct(0.009)).toBe("<1%");
+    expect(formatSimPct(1)).toBe(">99%");
+    expect(formatSimPct(0.996)).toBe(">99%");
+  });
+
+  it("rounds everything else to whole percentages", () => {
+    expect(formatSimPct(0.01)).toBe("1%");
+    expect(formatSimPct(0.426)).toBe("43%");
+    expect(formatSimPct(0.994)).toBe("99%");
+  });
+});
+
+describe("sortRows", () => {
+  const rows = [
+    { name: "b", v: 2 },
+    { name: "a", v: 1 },
+    { name: "c", v: 2 },
+  ];
+
+  it("sorts numbers both ways and keeps ties stable", () => {
+    expect(sortRows(rows, (r) => r.v, "desc").map((r) => r.name)).toEqual([
+      "b",
+      "c",
+      "a",
+    ]);
+    expect(sortRows(rows, (r) => r.v, "asc").map((r) => r.name)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
+  it("sorts strings and leaves the input alone", () => {
+    expect(sortRows(rows, (r) => r.name, "desc").map((r) => r.name)).toEqual([
+      "c",
+      "b",
+      "a",
+    ]);
+    expect(rows[0].name).toBe("b");
+  });
+});
+
+describe("roundLabel", () => {
+  it("names league matchdays and knockout rounds", () => {
+    expect(roundLabel({ stage: "LEAGUE_PHASE", matchday: 3 })).toBe(
+      "Matchday 3",
+    );
+    expect(roundLabel({ stage: "LAST_16", matchday: null })).toBe("Last 16");
   });
 });

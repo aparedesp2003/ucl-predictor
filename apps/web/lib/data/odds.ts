@@ -6,12 +6,13 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { webTitleOdds as v } from "@/lib/db/schema";
 
+import type { CacheTag } from "./tags";
 import type { TitleRace } from "./types";
 
 /** Title odds from the latest simulation of the current season, or null before the first run. */
 export async function getTitleRace(): Promise<TitleRace | null> {
   "use cache";
-  cacheTag("odds");
+  cacheTag("odds" satisfies CacheTag);
   cacheLife("hours");
 
   const rows = await getDb()

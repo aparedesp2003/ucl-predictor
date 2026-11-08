@@ -1,5 +1,6 @@
-// Read-only mirror of the views apps/engine creates for the web (Alembic migration
-// 5c2e7a91d4b3_week5_web_views). They are the only relations the web role can read.
+// Read-only mirror of the views apps/engine creates for the web (Alembic migrations
+// 5c2e7a91d4b3_week5_web_views and e6a1c4d27f90_week6_web_accuracy_views). They are the only
+// relations the web role can read.
 // Hand-written and marked .existing(): never run drizzle-kit push/migrate/generate.
 import {
   bigint,
@@ -7,6 +8,7 @@ import {
   date,
   doublePrecision,
   integer,
+  jsonb,
   numeric,
   pgView,
   smallint,
@@ -76,3 +78,59 @@ export const webModelScoreboard = pgView("web_model_scoreboard", {
   uniformAccuracy: numeric("uniform_accuracy", { mode: "number" }).notNull(),
   isPrimary: boolean("is_primary").notNull(),
 }).existing();
+
+// Migration e6a1c4d27f90_week6_web_accuracy_views.
+export const webPredictionScores = pgView("web_prediction_scores", {
+  model: varchar("model", { length: 32 }).notNull(),
+  matchId: integer("match_id").notNull(),
+  season: varchar("season", { length: 7 }).notNull(),
+  stage: varchar("stage", { length: 32 }).notNull(),
+  matchday: smallint("matchday"),
+  kickoffUtc: timestamp("kickoff_utc", { withTimezone: true }),
+  matchDate: date("match_date").notNull(),
+  homeTeamId: integer("home_team_id").notNull(),
+  homeName: varchar("home_name", { length: 128 }).notNull(),
+  homeShortName: varchar("home_short_name", { length: 64 }),
+  homeTla: varchar("home_tla", { length: 8 }),
+  awayTeamId: integer("away_team_id").notNull(),
+  awayName: varchar("away_name", { length: 128 }).notNull(),
+  awayShortName: varchar("away_short_name", { length: 64 }),
+  awayTla: varchar("away_tla", { length: 8 }),
+  homeGoals90: smallint("home_goals_90").notNull(),
+  awayGoals90: smallint("away_goals_90").notNull(),
+  outcome: varchar("outcome", { length: 1 }).notNull(),
+  predicted: varchar("predicted", { length: 1 }).notNull(),
+  pHome: doublePrecision("p_home").notNull(),
+  pDraw: doublePrecision("p_draw").notNull(),
+  pAway: doublePrecision("p_away").notNull(),
+  logLoss: doublePrecision("log_loss").notNull(),
+  rps: doublePrecision("rps").notNull(),
+  brier: doublePrecision("brier").notNull(),
+  hit: boolean("hit").notNull(),
+  isPrimary: boolean("is_primary").notNull(),
+}).existing();
+
+// Calibration bins ({lo, hi, n, mean_pred, observed}) are only set on the 'overall' rows.
+export const webBacktestSummary = pgView("web_backtest_summary", {
+  model: varchar("model", { length: 32 }).notNull(),
+  role: varchar("role", { length: 16 }).notNull(),
+  modelRunId: integer("model_run_id").notNull(),
+  runCreatedAt: timestamp("run_created_at", { withTimezone: true }).notNull(),
+  scope: varchar("scope", { length: 16 }).notNull(),
+  n: integer("n").notNull(),
+  logLoss: doublePrecision("log_loss").notNull(),
+  rps: doublePrecision("rps").notNull(),
+  brier: doublePrecision("brier").notNull(),
+  accuracy: doublePrecision("accuracy").notNull(),
+  isPrimary: boolean("is_primary").notNull(),
+  calibrationHome: jsonb("calibration_home").$type<RawCalibrationBin[]>(),
+  calibrationAway: jsonb("calibration_away").$type<RawCalibrationBin[]>(),
+}).existing();
+
+export type RawCalibrationBin = {
+  lo: number;
+  hi: number;
+  n: number;
+  mean_pred: number | null;
+  observed: number | null;
+};

@@ -6,12 +6,13 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getDb } from "@/lib/db";
 import { webMatchPredictions as v } from "@/lib/db/schema";
 
+import type { CacheTag } from "./tags";
 import type { MatchRow } from "./types";
 
 /** Every match of the current (newest) season, in kick-off order. */
 export async function getSeasonMatches(): Promise<MatchRow[]> {
   "use cache";
-  cacheTag("matches");
+  cacheTag("matches" satisfies CacheTag);
   cacheLife("hours");
 
   const rows = await getDb()
