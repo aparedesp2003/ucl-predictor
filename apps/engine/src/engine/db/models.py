@@ -114,6 +114,23 @@ class Team(Base):
     country: Mapped[str | None] = mapped_column(String(8))  # openfootball code scheme, e.g. GER
     fd_team_id: Mapped[int | None] = mapped_column(Integer, unique=True)
     crest_url: Mapped[str | None] = mapped_column(Text)
+    # Set on a duplicate identity whose aliases and matches moved to another team. The row (and its
+    # historical team_ratings) stays so past model runs remain reproducible.
+    merged_into_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"))
+
+
+class TeamMergeMove(Base):
+    """One row moved by a team merge, so the merge can be reversed exactly."""
+
+    __tablename__ = "team_merge_moves"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    merged_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
+    into_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"))
+    table_name: Mapped[str] = mapped_column(String(32))  # team_aliases | matches
+    column_name: Mapped[str] = mapped_column(String(32))  # team_id | home_team_id | away_team_id
+    row_id: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class TeamAlias(Base):
