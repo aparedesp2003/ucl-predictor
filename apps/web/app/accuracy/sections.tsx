@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 
 import { EmptyState } from "@/components/empty-state";
+import { ScrollHint } from "@/components/scroll-hint";
 import {
   getBacktest,
   getCurrentSeason,
@@ -80,63 +81,66 @@ export async function LiveTable() {
   const base = scores.find((s) => s.isPrimary) ?? scores[0];
 
   return (
-    <div
-      className="overflow-x-auto"
-      tabIndex={0}
-      role="region"
-      aria-label="Live scores per model"
-    >
-      <table className="w-full min-w-[32rem] text-sm">
-        <caption className="sr-only">
-          Live scores per model this season; lower log loss and RPS are better
-        </caption>
-        <thead className="text-xs text-mist">
-          <tr className="border-b border-line">
-            <th scope="col" className="py-2 pr-3 text-left font-normal">
-              Model
-            </th>
-            <th scope="col" className={th}>
-              Matches
-            </th>
-            <th scope="col" className={th}>
-              Log loss
-            </th>
-            <th scope="col" className={th}>
-              RPS
-            </th>
-            <th scope="col" className={th}>
-              Accuracy
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {scores.map((s) => (
-            <tr key={s.model} className="border-b border-rowline">
-              <th scope="row" className="py-2 pr-3 text-left font-medium">
-                {modelName(s.model)}
-                {s.isPrimary ? <PrimaryTag /> : null}
+    <>
+      <ScrollHint />
+      <div
+        className="overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Live scores per model"
+      >
+        <table className="w-full min-w-[32rem] text-sm">
+          <caption className="sr-only">
+            Live scores per model this season; lower log loss and RPS are better
+          </caption>
+          <thead className="text-xs text-mist">
+            <tr className="border-b border-line">
+              <th scope="col" className="py-2 pr-3 text-left font-normal">
+                Model
               </th>
-              <td className={td}>{s.n}</td>
-              <td className={cn(td, "font-semibold")}>
-                {s.logLoss.toFixed(3)}
-              </td>
-              <td className={td}>{s.rps.toFixed(3)}</td>
-              <td className={td}>{formatPct(s.accuracy)}</td>
+              <th scope="col" className={th}>
+                Matches
+              </th>
+              <th scope="col" className={th}>
+                Log loss
+              </th>
+              <th scope="col" className={th}>
+                RPS
+              </th>
+              <th scope="col" className={th}>
+                Accuracy
+              </th>
             </tr>
-          ))}
-          <tr className="border-b border-rowline text-mist">
-            <th scope="row" className="py-2 pr-3 text-left font-medium">
-              Guessing{" "}
-              <span className="text-xs font-normal">(a third each)</span>
-            </th>
-            <td className={td}>{base.n}</td>
-            <td className={td}>{base.uniformLogLoss.toFixed(3)}</td>
-            <td className={td}>{base.uniformRps.toFixed(3)}</td>
-            <td className={td}>{formatPct(base.uniformAccuracy)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {scores.map((s) => (
+              <tr key={s.model} className="border-b border-rowline">
+                <th scope="row" className="py-2 pr-3 text-left font-medium">
+                  {modelName(s.model)}
+                  {s.isPrimary ? <PrimaryTag /> : null}
+                </th>
+                <td className={td}>{s.n}</td>
+                <td className={cn(td, "font-semibold")}>
+                  {s.logLoss.toFixed(3)}
+                </td>
+                <td className={td}>{s.rps.toFixed(3)}</td>
+                <td className={td}>{formatPct(s.accuracy)}</td>
+              </tr>
+            ))}
+            <tr className="border-b border-rowline text-mist">
+              <th scope="row" className="py-2 pr-3 text-left font-medium">
+                Guessing{" "}
+                <span className="text-xs font-normal">(a third each)</span>
+              </th>
+              <td className={td}>{base.n}</td>
+              <td className={td}>{base.uniformLogLoss.toFixed(3)}</td>
+              <td className={td}>{base.uniformRps.toFixed(3)}</td>
+              <td className={td}>{formatPct(base.uniformAccuracy)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -195,6 +199,7 @@ export async function BacktestSection() {
   return (
     <div className="space-y-12">
       <div>
+        <ScrollHint />
         <div
           className="overflow-x-auto"
           tabIndex={0}
@@ -202,11 +207,9 @@ export async function BacktestSection() {
           aria-label="Backtest results per model"
         >
           <table className="w-full min-w-[36rem] text-sm">
-            <caption className="caption-bottom pt-3 text-left text-sm text-mist">
-              All {ordered[0]?.n.toLocaleString("en-GB")} main-competition
-              matches of the five test seasons. Baselines need no model:
-              guessing gives a third to each outcome, base rates use how often
-              home wins, draws and away wins happened in earlier seasons.
+            <caption className="sr-only">
+              Backtest results per model on the five test seasons; lower log
+              loss, RPS and Brier are better
             </caption>
             <thead className="text-xs text-mist">
               <tr className="border-b border-line">
@@ -237,6 +240,12 @@ export async function BacktestSection() {
             </tbody>
           </table>
         </div>
+        <p className="mt-3 max-w-[70ch] text-sm text-mist">
+          All {ordered[0]?.n.toLocaleString("en-GB")} main-competition matches
+          of the five test seasons. Baselines need no model: guessing gives a
+          third to each outcome, base rates use how often home wins, draws and
+          away wins happened in earlier seasons.
+        </p>
 
         <details className="mt-4 text-sm">
           <summary className="cursor-pointer text-floodlight">

@@ -62,9 +62,10 @@ export default function AboutPage() {
             </p>
             <p>
               Several candidate models were compared on past seasons. The one
-              used on this site was picked by a rule fixed in advance: lowest
-              log loss on validation seasons, never on the seasons used to
-              report results.
+              used on this site was picked by a rule fixed in advance: the
+              lowest log loss on earlier validation seasons, kept only if it is
+              no worse than plain Elo on the later test seasons. Nothing was
+              tuned on the test seasons.
             </p>
           </div>
         </section>

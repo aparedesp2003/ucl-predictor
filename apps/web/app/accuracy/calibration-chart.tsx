@@ -4,7 +4,7 @@ import type { CalibrationBin } from "@/lib/data/types";
 
 // Plot geometry in viewBox units: a square plot with room for ticks and axis titles.
 const SIZE = 300;
-const PAD = { left: 44, right: 12, top: 12, bottom: 40 };
+const PAD = { left: 56, right: 20, top: 12, bottom: 40 };
 const PLOT = SIZE - PAD.left - PAD.right;
 const TICKS = [0, 0.25, 0.5, 0.75, 1];
 
@@ -115,7 +115,7 @@ export function CalibrationChart({
           Predicted chance
         </text>
         <text
-          transform={`translate(11 ${y(0.5)}) rotate(-90)`}
+          transform={`translate(12 ${y(0.5)}) rotate(-90)`}
           textAnchor="middle"
           fontSize={11}
           fill="currentColor"

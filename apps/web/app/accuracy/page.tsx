@@ -92,8 +92,9 @@ export default function AccuracyPage() {
         </h2>
         <p className="mt-1 mb-5 max-w-[70ch] text-sm text-mist">
           Before the season, each candidate model predicted five past seasons it
-          had not been tuned on. The primary model was chosen on earlier
-          validation seasons, before these numbers were looked at.
+          had not been tuned on. The primary model is the one with the lowest
+          log loss on earlier validation seasons, kept only if it does no worse
+          than plain Elo here.
         </p>
         <Suspense
           fallback={<RowsSkeleton rows={7} label="Loading backtest results" />}

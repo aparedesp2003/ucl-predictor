@@ -4,6 +4,7 @@ import { Check, X } from "lucide-react";
 import { useId, useState } from "react";
 
 import { LocalTime } from "@/components/local-time";
+import { ScrollHint } from "@/components/scroll-hint";
 import { TeamBadge } from "@/components/team-badge";
 import { formatPct, roundLabel, teamName } from "@/lib/data/derive";
 import type { ScoredPrediction } from "@/lib/data/types";
@@ -46,6 +47,7 @@ export function PredictionList({ rows }: { rows: ScoredPrediction[] }) {
         </p>
       </div>
 
+      <ScrollHint />
       <div
         className="overflow-x-auto"
         tabIndex={0}

@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useState } from "react";
 
+import { ScrollHint } from "@/components/scroll-hint";
 import { TeamBadge } from "@/components/team-badge";
 import {
   formatSimPct,
@@ -97,8 +98,11 @@ export function SimulatorTable({ race }: { race: TitleRace }) {
         ? "highest first"
         : "lowest first";
 
+  const caption = `${race.nSims.toLocaleString("en-GB")} simulated seasons, results through ${formatDate(race.resultsThrough)}. Ratings plus uncertainty; rules from the 2026/27 regulations.`;
+
   return (
     <>
+      <ScrollHint />
       <div
         className="overflow-x-auto rounded-md border border-line"
         tabIndex={0}
@@ -106,13 +110,9 @@ export function SimulatorTable({ race }: { race: TitleRace }) {
         aria-labelledby="sim-caption"
       >
         <table className="w-full min-w-[56rem] text-sm">
-          <caption
-            id="sim-caption"
-            className="caption-bottom border-t border-line px-4 py-3 text-left text-sm text-mist"
-          >
-            {race.nSims.toLocaleString("en-GB")} simulated seasons, results
-            through {formatDate(race.resultsThrough)}. Ratings plus uncertainty;
-            rules from the 2026/27 regulations.
+          {/* Visible copy sits below the scroll box so it never scrolls out of view on phones. */}
+          <caption id="sim-caption" className="sr-only">
+            {caption}
           </caption>
           <thead className="text-xs text-mist">
             <tr className="border-b border-line">
@@ -205,6 +205,9 @@ export function SimulatorTable({ race }: { race: TitleRace }) {
           </tbody>
         </table>
       </div>
+      <p className="mt-3 text-sm text-mist" aria-hidden>
+        {caption}
+      </p>
       <p className="sr-only" aria-live="polite">
         Sorted by {column.spoken ?? column.label}, {order}.
       </p>
