@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 /* "Night match" palette. Dark only for now. */
 @theme {
@@ -17,31 +15,6 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), Georgia, serif;
-}
-
-/* shadcn/ui tokens, mapped onto the palette. */
-@theme inline {
-  --color-background: var(--color-night);
-  --color-foreground: var(--color-starlight);
-  --color-card: var(--color-midnight);
-  --color-card-foreground: var(--color-starlight);
-  --color-popover: var(--color-midnight);
-  --color-popover-foreground: var(--color-starlight);
-  --color-primary: var(--color-floodlight);
-  --color-primary-foreground: var(--color-night);
-  --color-secondary: var(--color-line);
-  --color-secondary-foreground: var(--color-starlight);
-  --color-muted-foreground: var(--color-mist);
-  --color-accent: var(--color-line);
-  --color-accent-foreground: var(--color-starlight);
-  --color-destructive: #ff8a8a;
-  --color-border: var(--color-line);
-  --color-input: var(--color-line);
-  --color-ring: var(--color-floodlight);
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
 }
 
 @layer base {
