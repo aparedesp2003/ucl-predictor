@@ -5,6 +5,12 @@ export const SITE_DESCRIPTION =
 
 export const GITHUB_URL = "https://github.com/aparedesp2003/ucl-predictor";
 
+/** Public origin for metadata, sitemap and robots (no trailing slash). */
+export function siteUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  return url.replace(/\/+$/, "");
+}
+
 export const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/matches", label: "Matches" },
