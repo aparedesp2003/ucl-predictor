@@ -2,7 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 
 import { EmptyState } from "@/components/empty-state";
-import { LocalTime } from "@/components/local-time";
+import { LocalDateRange } from "@/components/local-time";
 import { MatchCallCard } from "@/components/match-call-card";
 import { TeamBadge } from "@/components/team-badge";
 import {
@@ -58,13 +58,8 @@ export async function Hero() {
     <div>
       {range ? (
         <p className="text-sm font-medium tracking-wide text-floodlight uppercase">
-          Matchday {matchday} · <LocalTime iso={range.first} format="date" />
-          {range.first.slice(0, 10) !== range.last.slice(0, 10) ? (
-            <>
-              {"–"}
-              <LocalTime iso={range.last} format="date" />
-            </>
-          ) : null}
+          Matchday {matchday} ·{" "}
+          <LocalDateRange first={range.first} last={range.last} />
         </p>
       ) : null}
       <h1 className="mt-2 max-w-3xl font-display text-4xl leading-tight font-semibold sm:text-5xl">

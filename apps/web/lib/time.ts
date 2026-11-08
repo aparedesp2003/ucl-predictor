@@ -98,3 +98,16 @@ export function formatDate(ymd: string): string {
   const [year, month, day] = ymd.split("-").map(Number);
   return `${day} ${MONTHS[month - 1].slice(0, 3)} ${year}`;
 }
+
+/** A day range without repeating the month: "24 Nov", "24–25 Nov", "30 Nov – 1 Dec". */
+export function formatDayRange(first: DateParts, last: DateParts): string {
+  const month = (p: DateParts) => MONTHS[p.month - 1].slice(0, 3);
+  if (first.year !== last.year) {
+    return `${first.day} ${month(first)} ${first.year} – ${last.day} ${month(last)} ${last.year}`;
+  }
+  if (first.month !== last.month) {
+    return `${first.day} ${month(first)} – ${last.day} ${month(last)}`;
+  }
+  if (first.day !== last.day) return `${first.day}–${last.day} ${month(first)}`;
+  return `${first.day} ${month(first)}`;
+}

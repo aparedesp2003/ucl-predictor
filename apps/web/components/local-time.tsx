@@ -2,7 +2,12 @@
 
 import { useSyncExternalStore } from "react";
 
-import { dateParts, formatParts, type TimeFormat } from "@/lib/time";
+import {
+  dateParts,
+  formatDayRange,
+  formatParts,
+  type TimeFormat,
+} from "@/lib/time";
 
 const subscribe = () => () => {};
 
@@ -33,5 +38,21 @@ export function LocalTime({
       {text}
       {showZone ? " UTC" : null}
     </time>
+  );
+}
+
+/** First and last kick-off days in the visitor's time zone, e.g. "24–25 Nov". */
+export function LocalDateRange({
+  first,
+  last,
+}: {
+  first: string;
+  last: string;
+}) {
+  const timeZone = useTimeZone();
+  return (
+    <span>
+      {formatDayRange(dateParts(first, timeZone), dateParts(last, timeZone))}
+    </span>
   );
 }
