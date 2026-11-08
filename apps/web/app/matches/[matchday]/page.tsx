@@ -37,17 +37,50 @@ export async function generateMetadata({
   return { title: md ? `Matchday ${md} predictions` : "Matches" };
 }
 
-export default async function MatchdayPage({
+function TableSkeleton() {
+  return (
+    <LoadingBlock label="Loading matches">
+      <div className="space-y-2">
+        {Array.from({ length: 9 }, (_, i) => (
+          <Skeleton key={i} className="h-12" />
+        ))}
+      </div>
+    </LoadingBlock>
+  );
+}
+
+// The shell renders instantly; everything that depends on the URL streams in below it.
+export default function MatchdayPage({
   params,
 }: PageProps<"/matches/[matchday]">) {
-  const md = parseMatchday((await params).matchday);
-  if (!md) notFound();
-
   return (
     <main id="main" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <p className="text-sm font-medium tracking-wide text-floodlight uppercase">
         League phase
       </p>
+      <Suspense
+        fallback={
+          <>
+            <Skeleton className="mt-3 h-10 w-56" />
+            <Skeleton className="mt-6 mb-8 h-11 w-full max-w-md" />
+            <TableSkeleton />
+          </>
+        }
+      >
+        <Matchday params={params} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function Matchday({
+  params,
+}: Pick<PageProps<"/matches/[matchday]">, "params">) {
+  const md = parseMatchday((await params).matchday);
+  if (!md) notFound();
+
+  return (
+    <>
       <h1 className="mt-2 font-display text-4xl font-semibold">
         Matchday {md}
       </h1>
@@ -75,21 +108,11 @@ export default async function MatchdayPage({
       </nav>
 
       <section aria-label={`Matchday ${md} matches`} className="mt-8">
-        <Suspense
-          fallback={
-            <LoadingBlock label="Loading matches">
-              <div className="space-y-2">
-                {Array.from({ length: 9 }, (_, i) => (
-                  <Skeleton key={i} className="h-12" />
-                ))}
-              </div>
-            </LoadingBlock>
-          }
-        >
+        <Suspense fallback={<TableSkeleton />}>
           <MatchdayMatches matchday={md} />
         </Suspense>
       </section>
-    </main>
+    </>
   );
 }
 
