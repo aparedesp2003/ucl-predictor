@@ -24,13 +24,18 @@ Both variables live in the repo-root `.env` (see `.env.example`).
 
 ## The `web_readonly` role
 
-`docs/sql/web_readonly.sql` creates (or updates) a login role that can `SELECT` the three views
-above and nothing else. It does not change any other role's privileges. Run it once per database
-with `psql`, connected as the database owner. Re-running it is safe and sets a new password, which
-is also how you rotate it.
+A login role that can `SELECT` the three views above and nothing else. Creating it changes no
+other role's privileges. Set it up once per database, as the database owner, with either script:
 
-The script asks for the password, which keeps it out of your shell history. You can also pass it
-with `-v web_password=...`. The password is never stored in the repo.
+| Script                                 | Use it from                                   | Password                                                        |
+| -------------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| `docs/sql/web_readonly.sql`            | `psql`                                        | prompted (stays out of shell history), or `-v web_password=...` |
+| `docs/sql/web_readonly.sql-editor.sql` | the Supabase or Neon **SQL editor** (no psql) | edit the `<CHANGE_ME>` placeholder before running               |
+
+Both grant the same privileges. Re-running either is safe and sets a new password, which is also how
+you rotate it. The password is never stored in the repo. The editor script refuses to run while the
+placeholder is still there. Paste it, set the password, run it, then don't save the query, since
+editors may keep it in their history.
 
 ### Neon (dev)
 
@@ -40,6 +45,8 @@ with `-v web_password=...`. The password is never stored in the repo.
    ```powershell
    psql "postgresql://neondb_owner:<owner password>@<endpoint>.neon.tech/neondb?sslmode=require" -f docs/sql/web_readonly.sql
    ```
+   Or, without psql, paste `docs/sql/web_readonly.sql-editor.sql` into the Neon **SQL Editor**
+   (it runs as the owner role).
 3. Use the same host and database with the new role as `WEB_DATABASE_URL`:
    `postgresql://web_readonly:<web password>@<endpoint>.neon.tech/neondb?sslmode=require`
 
@@ -51,7 +58,11 @@ with `-v web_password=...`. The password is never stored in the repo.
    ```powershell
    psql "postgresql://postgres.<project-ref>:<postgres password>@aws-0-<region>.pooler.supabase.com:5432/postgres" -f docs/sql/web_readonly.sql
    ```
-3. On the pooler the new role connects as `web_readonly.<project-ref>`:
+   Or, without psql, paste `docs/sql/web_readonly.sql-editor.sql` into the Supabase **SQL Editor**
+   (it runs as `postgres`).
+3. The role is created as `web_readonly`, but on the Supabase pooler the **username is
+   `web_readonly.<project-ref>`** (role name, a dot, then the project ref). Plain `web_readonly`
+   is rejected there:
    `postgresql://web_readonly.<project-ref>:<web password>@aws-0-<region>.pooler.supabase.com:5432/postgres`
    Set it as `WEB_DATABASE_URL` wherever the production web app runs. Do not put it in a local `.env`.
 
