@@ -115,5 +115,8 @@ export function titleHeadline(teams: TitleOdds[]): string | null {
 
 export function formatPct(p: number, digits = 0): string {
   if (p > 0 && p < 0.01 && digits === 0) return "<1%";
+  // Never round a non-certain probability up to 100%.
+  const top = 100 - 10 ** -digits;
+  if (p < 1 && p * 100 >= top + 10 ** -digits / 2) return `>${top.toFixed(digits)}%`;
   return `${(p * 100).toFixed(digits)}%`;
 }

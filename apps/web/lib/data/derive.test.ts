@@ -121,6 +121,10 @@ describe("numbers", () => {
     expect(formatPct(0.004)).toBe("<1%");
     expect(formatPct(0)).toBe("0%");
     expect(formatPct(0.1234, 1)).toBe("12.3%");
+    expect(formatPct(0.996)).toBe(">99%");
+    expect(formatPct(0.994)).toBe("99%");
+    expect(formatPct(1)).toBe("100%");
+    expect(formatPct(0.9996, 1)).toBe(">99.9%");
   });
 
   it("computes the log-loss improvement over guessing", () => {
