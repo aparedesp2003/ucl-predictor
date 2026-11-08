@@ -44,6 +44,7 @@ async function loadSeason() {
 }
 
 export async function Hero() {
+  await connection(); // before any read starts, including the parallel ones below
   const [{ matches, scores }, race] = await Promise.all([
     loadSeason(),
     safely(getTitleRace),
