@@ -73,11 +73,15 @@ class LoadStats:
 
 
 def build_resolver(conn: Connection) -> TeamResolver:
+    """Index of the active teams; merged duplicates are left out so nothing resolves to them."""
     resolver = TeamResolver(load_overrides())
-    for tid, name, country in conn.execute(select(Team.id, Team.name, Team.country)):
+    active = Team.merged_into_team_id.is_(None)
+    for tid, name, country in conn.execute(select(Team.id, Team.name, Team.country).where(active)):
         resolver.add_team(tid, name, country)
     for tid, source, alias in conn.execute(
         select(TeamAlias.team_id, TeamAlias.source, TeamAlias.alias)
+        .join(Team, Team.id == TeamAlias.team_id)
+        .where(active)
     ):
         resolver.add_alias(tid, source, alias)
     return resolver

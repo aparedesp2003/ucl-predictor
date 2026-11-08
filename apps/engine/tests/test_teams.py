@@ -2,7 +2,7 @@ import pytest
 
 from engine.db.models import Source
 from engine.ingest.football_data import COUNTRY_CODE_MAP
-from engine.ingest.teams import How, Override, TeamResolver, normalize
+from engine.ingest.teams import How, Override, TeamResolver, load_overrides, normalize
 
 OF, FD = Source.OPENFOOTBALL, Source.FOOTBALL_DATA
 
@@ -102,3 +102,19 @@ def test_possible_duplicates():
     r.add_team(3, "AFC Ajax", "NED")
     r.add_team(4, "PSV", "ECU")
     assert r.possible_duplicates() == [("NED", "PSV", "PSV Eindhoven")]
+
+
+def test_feyenoord_short_name_resolves_by_override():
+    r = TeamResolver([Override(OF, "Feyenoord", "Feyenoord Rotterdam", "")])
+    r.add_team(168, "Feyenoord Rotterdam", "NED")
+    res = r.resolve(OF, "Feyenoord", "NED")
+    assert (res.team_id, res.how) == (168, How.OVERRIDE)
+    assert TeamResolver().resolve(OF, "Feyenoord", "NED").team_id is None  # no override, no guess
+
+
+def test_split_team_overrides_are_registered():
+    targets = {(o.source, o.alias): o.team_name for o in load_overrides()}
+    assert targets[(OF, "Feyenoord")] == "Feyenoord Rotterdam"
+    assert targets[(OF, "Inter")] == "FC Internazionale Milano"
+    assert targets[(OF, "Sporting CP")] == "Sporting Clube de Portugal"
+    assert len(targets) == len(load_overrides())  # one row per (source, alias)

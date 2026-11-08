@@ -19,3 +19,6 @@ openfootball,FC Steaua Bucureşti,FCSB,club renamed 2017; UEFA treats FCSB as th
 openfootball,Crvena Zvezda,FK Crvena Zvezda,short name; full name used 2023-25 alongside it
 openfootball,Shakhtar Donetsk,FK Shakhtar Donetsk,short name until 2022-23; football-data name
 openfootball,AS Monaco FC,AS Monaco,source switched country code FRA -> MCO in 2024-25; bypasses country guard
+openfootball,Feyenoord,Feyenoord Rotterdam,short name 2017-18 and 2025-26 clq.txt; full name 2023-25 and football-data id 675
+openfootball,Inter,FC Internazionale Milano,short name until 2022-23; full name from 2023-24 and football-data id 108
+openfootball,Sporting CP,Sporting Clube de Portugal,short name until 2022-23; full name from 2024-25 and football-data id 498

@@ -131,7 +131,11 @@ def cmd_report(_: argparse.Namespace) -> int:
         n_matches = conn.scalar(select(func.count()).select_from(Match))
         n_teams = conn.scalar(select(func.count()).select_from(Team))
         n_fd = conn.scalar(select(func.count()).where(Team.fd_team_id.is_not(None)))
-        print(f"\ntotals: {n_matches} matches, {n_teams} teams ({n_fd} with fd_team_id)")
+        n_merged = conn.scalar(select(func.count()).where(Team.merged_into_team_id.is_not(None)))
+        print(
+            f"\ntotals: {n_matches} matches, {n_teams} teams ({n_fd} with fd_team_id,"
+            f" {n_merged} merged into another team)"
+        )
 
         unresolved = _unresolved_names(conn, resolver)
         _table("unresolved team names", ("source", "name"), unresolved)
