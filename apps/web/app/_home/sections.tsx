@@ -13,6 +13,7 @@ import {
   isLocked,
   kickoffRange,
   leagueMatches,
+  modelName,
   teamName,
   titleHeadline,
 } from "@/lib/data/derive";
@@ -25,12 +26,6 @@ import { teamColors } from "@/lib/teams/colors";
 import { formatDate } from "@/lib/time";
 
 const FALLBACK_HEADLINE = "Champions League predictions, match by match";
-const MODEL_NAMES: Record<string, string> = {
-  elo: "Elo",
-  poisson_shrink: "Poisson",
-};
-
-const modelName = (model: string) => MODEL_NAMES[model] ?? model;
 
 // Every section reads at request time: connection() keeps database reads out of the build.
 async function loadSeason() {

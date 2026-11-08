@@ -25,6 +25,7 @@ BEGIN
 
   EXECUTE format('GRANT CONNECT ON DATABASE %I TO web_readonly', current_database());
   GRANT USAGE ON SCHEMA public TO web_readonly;
-  GRANT SELECT ON web_match_predictions, web_title_odds, web_model_scoreboard TO web_readonly;
+  GRANT SELECT ON web_match_predictions, web_title_odds, web_model_scoreboard,
+                  web_prediction_scores, web_backtest_summary TO web_readonly;
 END
 $$;

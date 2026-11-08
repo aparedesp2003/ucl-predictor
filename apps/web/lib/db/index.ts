@@ -27,8 +27,16 @@ function databaseUrl(): string {
 export function getDb(): Db {
   if (globalForDb.db) return globalForDb.db;
 
-  // prepare: false keeps us compatible with Supabase's poolers.
-  const client = postgres(databaseUrl(), { prepare: false });
+  // Production runs on serverless functions against Supabase's transaction pooler (port 6543):
+  // prepared statements do not survive it (prepare: false), and every warm instance holds its own
+  // pool, so keep each one small and let idle connections go. See README "Database connections".
+  const production = process.env.NODE_ENV === "production";
+  const client = postgres(databaseUrl(), {
+    prepare: false,
+    max: production ? 3 : 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
   globalForDb.db = drizzle(client, { schema });
   return globalForDb.db;
 }

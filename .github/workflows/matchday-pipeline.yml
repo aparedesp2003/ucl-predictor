@@ -61,3 +61,42 @@ jobs:
         run: |
           echo "## Matchday pipeline: failed before a pipeline_runs row was recorded" >> "$GITHUB_STEP_SUMMARY"
           echo "See the step logs (setup, migration or database connection)." >> "$GITHUB_STEP_SUMMARY"
+
+      # Expire the web app's caches after a run that wrote predictions/simulations. Always runs and
+      # always says what it did in the job summary, so a refresh can never be skipped unnoticed;
+      # it never fails the job (the data is already safe in the database).
+      - name: Refresh site
+        if: always()
+        env:
+          STATUS: ${{ steps.pipeline.outputs.status }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          note() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1"; }
+          if [ -z "$STATUS" ]; then
+            echo "::warning::Pipeline reported no status; site not refreshed"
+            note "**Site refresh:** not attempted, the pipeline reported no status."
+            exit 0
+          fi
+          if [ "$STATUS" != "ok" ]; then
+            note "**Site refresh:** not needed (pipeline status \`$STATUS\`)."
+            exit 0
+          fi
+          if [ -z "$SITE_URL" ]; then
+            note "**Site refresh:** skipped, the SITE_URL secret is not set."
+            exit 0
+          fi
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "::warning::SITE_URL is set but REVALIDATE_SECRET is not; site not refreshed"
+            note "**Site refresh:** skipped, the REVALIDATE_SECRET secret is not set."
+            exit 0
+          fi
+          body="$(mktemp)"
+          code="$(curl -sS -o "$body" -w '%{http_code}' --max-time 30 -X POST \
+            -H "Authorization: Bearer $REVALIDATE_SECRET" "${SITE_URL%/}/api/revalidate")" || code="000"
+          if [ "$code" = "200" ]; then
+            note "**Site refresh:** ok, revalidated $(jq -c '.revalidated' "$body" 2>/dev/null || echo 'all tags')."
+          else
+            echo "::warning::Site revalidate failed (HTTP $code)"
+            note "**Site refresh:** failed (HTTP $code); pages update when their cache expires (at most an hour)."
+          fi

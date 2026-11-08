@@ -11,6 +11,9 @@ const out = path.join(import.meta.dirname, "..", "screenshots", label);
 const pages = [
   ["home", "/"],
   ["matches-4", "/matches/4"],
+  ["simulator", "/simulator"],
+  ["accuracy", "/accuracy"],
+  ["about", "/about"],
 ];
 const widths = [1440, 390];
 

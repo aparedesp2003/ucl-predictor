@@ -117,6 +117,65 @@ export function formatPct(p: number, digits = 0): string {
   if (p > 0 && p < 0.01 && digits === 0) return "<1%";
   // Never round a non-certain probability up to 100%.
   const top = 100 - 10 ** -digits;
-  if (p < 1 && p * 100 >= top + 10 ** -digits / 2) return `>${top.toFixed(digits)}%`;
+  if (p < 1 && p * 100 >= top + 10 ** -digits / 2)
+    return `>${top.toFixed(digits)}%`;
   return `${(p * 100).toFixed(digits)}%`;
+}
+
+const MODEL_NAMES: Record<string, string> = {
+  elo: "Elo",
+  poisson: "Poisson",
+  poisson_cal: "Poisson, calibrated",
+  poisson_shrink: "Poisson, shrunk",
+  blend: "Blend",
+  uniform: "Guessing",
+  historical: "Base rates",
+};
+
+export function modelName(model: string): string {
+  return MODEL_NAMES[model] ?? model;
+}
+
+/** A simulated probability: never "0%" or "100%", since a run that never happened is not impossible. */
+export function formatSimPct(p: number): string {
+  if (p < 0.01) return "<1%";
+  if (p >= 0.995) return ">99%";
+  return formatPct(p);
+}
+
+export type SortDir = "asc" | "desc";
+
+/** A sorted copy; ties keep their original order. */
+export function sortRows<T>(
+  rows: readonly T[],
+  value: (row: T) => number | string,
+  dir: SortDir,
+): T[] {
+  const sign = dir === "asc" ? 1 : -1;
+  return rows
+    .map((row, i) => ({ row, i, v: value(row) }))
+    .sort((a, b) => {
+      const c =
+        typeof a.v === "string" && typeof b.v === "string"
+          ? a.v.localeCompare(b.v)
+          : (a.v as number) - (b.v as number);
+      return sign * c || a.i - b.i;
+    })
+    .map((x) => x.row);
+}
+
+const STAGE_NAMES: Record<string, string> = {
+  LEAGUE_PHASE: "League phase",
+  KNOCKOUT_PLAYOFF: "Knockout play-offs",
+  LAST_16: "Last 16",
+  QUARTER_FINALS: "Quarter-finals",
+  SEMI_FINALS: "Semi-finals",
+  FINAL: "Final",
+};
+
+/** "Matchday 3" in the league phase, the round's name after it. */
+export function roundLabel(m: { stage: string; matchday: number | null }) {
+  if (m.stage === LEAGUE_PHASE && m.matchday !== null)
+    return `Matchday ${m.matchday}`;
+  return STAGE_NAMES[m.stage] ?? m.stage;
 }

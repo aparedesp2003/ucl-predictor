@@ -56,9 +56,63 @@ export type ScoreRow = {
   season: string;
   n: number;
   logLoss: number;
-  uniformLogLoss: number;
+  rps: number;
   accuracy: number;
+  uniformLogLoss: number;
+  uniformRps: number;
+  uniformAccuracy: number;
   isPrimary: boolean;
 };
 
 export type Outcome = "H" | "D" | "A";
+
+/** One official (pre-kick-off) prediction of a finished match, scored on the 90-minute result. */
+export type ScoredPrediction = {
+  matchId: number;
+  model: string;
+  stage: string;
+  matchday: number | null;
+  kickoff: string; // ISO UTC
+  home: TeamRef;
+  away: TeamRef;
+  homeGoals: number;
+  awayGoals: number;
+  outcome: Outcome;
+  predicted: Outcome;
+  pHome: number;
+  pDraw: number;
+  pAway: number;
+  logLoss: number;
+  rps: number;
+  hit: boolean;
+};
+
+export type CalibrationBin = {
+  lo: number;
+  hi: number;
+  n: number;
+  meanPred: number | null;
+  observed: number | null;
+};
+
+export type BacktestRow = {
+  model: string;
+  role: "candidate" | "baseline";
+  scope: string; // a test season label, or "overall"
+  n: number;
+  logLoss: number;
+  rps: number;
+  brier: number;
+  accuracy: number;
+  isPrimary: boolean;
+};
+
+export type Backtest = {
+  rows: BacktestRow[];
+  /** The primary model's test-season calibration; away is null when the run did not store it. */
+  calibration: {
+    model: string;
+    home: CalibrationBin[] | null;
+    away: CalibrationBin[] | null;
+  } | null;
+};

@@ -1,0 +1,13 @@
+[
+  {"case": "home favoured, home won", "p_home": 0.6, "p_draw": 0.25, "p_away": 0.15, "home_goals": 2, "away_goals": 0, "hit": true},
+  {"case": "home favoured, away won", "p_home": 0.6, "p_draw": 0.25, "p_away": 0.15, "home_goals": 0, "away_goals": 2, "hit": false},
+  {"case": "away favoured, away won", "p_home": 0.2, "p_draw": 0.25, "p_away": 0.55, "home_goals": 0, "away_goals": 1, "hit": true},
+  {"case": "draw favoured, draw", "p_home": 0.3, "p_draw": 0.4, "p_away": 0.3, "home_goals": 1, "away_goals": 1, "hit": true},
+  {"case": "draw favoured, home won", "p_home": 0.3, "p_draw": 0.4, "p_away": 0.3, "home_goals": 2, "away_goals": 1, "hit": false},
+  {"case": "home = draw tie goes to home, draw", "p_home": 0.4, "p_draw": 0.4, "p_away": 0.2, "home_goals": 1, "away_goals": 1, "hit": false},
+  {"case": "home = draw tie goes to home, home won", "p_home": 0.4, "p_draw": 0.4, "p_away": 0.2, "home_goals": 2, "away_goals": 0, "hit": true},
+  {"case": "draw = away tie goes to draw, 0-0", "p_home": 0.2, "p_draw": 0.4, "p_away": 0.4, "home_goals": 0, "away_goals": 0, "hit": true},
+  {"case": "draw = away tie goes to draw, away won", "p_home": 0.2, "p_draw": 0.4, "p_away": 0.4, "home_goals": 0, "away_goals": 1, "hit": false},
+  {"case": "three-way tie goes to home, draw", "p_home": 0.3333333333333333, "p_draw": 0.3333333333333333, "p_away": 0.3333333333333333, "home_goals": 1, "away_goals": 1, "hit": false},
+  {"case": "three-way tie goes to home, home won", "p_home": 0.3333333333333333, "p_draw": 0.3333333333333333, "p_away": 0.3333333333333333, "home_goals": 3, "away_goals": 1, "hit": true}
+]
