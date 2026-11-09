@@ -41,6 +41,13 @@
   .grow-scope:not([data-ready]) .grow-bar {
     width: 0 !important;
   }
+  /* Rings drawn with pathLength="100": the arc grows from nothing. */
+  .grow-ring {
+    transition: stroke-dashoffset 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .grow-scope:not([data-ready]) .grow-ring {
+    stroke-dashoffset: 100 !important;
+  }
 }
 
 /* Home fixture ticker: the list twice in one track, scrolled by half its width. */
