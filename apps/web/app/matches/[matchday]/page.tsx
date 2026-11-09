@@ -9,7 +9,7 @@ import { LoadingBlock, Skeleton } from "@/components/skeleton";
 import { leagueMatches } from "@/lib/data/derive";
 import { getSeasonMatches } from "@/lib/data/matches";
 import { safely } from "@/lib/data/safe";
-import { LEAGUE_MATCHDAYS } from "@/lib/site";
+import { LEAGUE_MATCHDAYS, pageMetadata } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 import { MatchdayTable } from "./matchday-table";
@@ -34,7 +34,12 @@ export async function generateMetadata({
   params,
 }: PageProps<"/matches/[matchday]">): Promise<Metadata> {
   const md = parseMatchday((await params).matchday);
-  return { title: md ? `Matchday ${md} predictions` : "Matches" };
+  if (!md) return { title: "Matches" };
+  return pageMetadata({
+    title: `Matchday ${md} predictions`,
+    description: `Pre-kick-off home, draw and away probabilities for every Champions League matchday ${md} match, with the results once they are played.`,
+    path: `/matches/${md}`,
+  });
 }
 
 function TableSkeleton() {

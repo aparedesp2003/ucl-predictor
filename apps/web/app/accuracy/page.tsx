@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
+
+import { pageMetadata } from "@/lib/site";
 import { Suspense } from "react";
 
 import { LoadingBlock, Skeleton } from "@/components/skeleton";
 
 import { BacktestSection, Headline, LiveTable, Predictions } from "./sections";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Accuracy",
   description:
     "How the predictions score against real results this season, every prediction with its outcome, and how the models did on five past seasons.",
-};
+  path: "/accuracy",
+});
 
 const sectionTitle = "font-display text-2xl font-semibold";
 
