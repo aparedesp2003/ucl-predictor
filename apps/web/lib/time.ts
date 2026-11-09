@@ -70,7 +70,7 @@ export function dateParts(iso: string, timeZone = "UTC"): DateParts {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export type TimeFormat = "time" | "date" | "day" | "dayTime";
+export type TimeFormat = "time" | "date" | "day" | "dayTime" | "weekday";
 
 export function formatParts(p: DateParts, format: TimeFormat): string {
   const time = `${pad(p.hour)}:${pad(p.minute)}`;
@@ -82,6 +82,8 @@ export function formatParts(p: DateParts, format: TimeFormat): string {
       return `${p.day} ${month.slice(0, 3)}`;
     case "day":
       return `${WEEKDAYS[p.weekday]} ${p.day} ${month}`;
+    case "weekday":
+      return WEEKDAYS[p.weekday].slice(0, 3);
     case "dayTime":
       return `${WEEKDAYS[p.weekday].slice(0, 3)} ${p.day} ${month.slice(0, 3)}, ${time}`;
   }

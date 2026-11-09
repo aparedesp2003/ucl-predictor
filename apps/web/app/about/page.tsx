@@ -25,7 +25,7 @@ export default function AboutPage() {
           How the predictions work
         </h1>
         <p className="mt-4 text-mist">
-          Matchcast gives a home, draw and away probability for every Champions
+          Ninety gives a home, draw and away probability for every Champions
           League match before it kicks off, keeps score of how those
           probabilities hold up, and plays out the rest of the season to
           estimate where each club will finish.

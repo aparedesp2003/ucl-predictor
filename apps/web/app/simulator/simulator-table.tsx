@@ -197,7 +197,9 @@ export function SimulatorTable({ race }: { race: TitleRace }) {
                         style={{ width: `${(t.pWin / maxWin) * 100}%` }}
                       />
                     </span>
-                    <span className="w-10">{formatSimPct(t.pWin)}</span>
+                    <span className="w-12 font-score text-lg leading-none font-semibold">
+                      {formatSimPct(t.pWin)}
+                    </span>
                   </span>
                 </td>
               </tr>

@@ -1,7 +1,11 @@
-export const SITE_NAME = "Matchcast";
+export const SITE_NAME = "Ninety";
 
 export const SITE_DESCRIPTION =
   "Pre-kick-off probabilities for every Champions League match, and the title race simulated from them.";
+
+/** The brand promise, on the social card. */
+export const SITE_TAGLINE =
+  "Champions League predictions, locked before kick-off";
 
 export const GITHUB_URL = "https://github.com/aparedesp2003/ucl-predictor";
 
@@ -21,7 +25,7 @@ export const NAV_ITEMS = [
 
 export const LEAGUE_MATCHDAYS = 8;
 
-const SITE_TITLE = `${SITE_NAME}: Champions League predictions`;
+export const SITE_TITLE = `${SITE_NAME} — Champions League predictions`;
 
 /** Root metadata: title template, social card defaults (the card itself is app/opengraph-image). */
 export const ROOT_METADATA = {

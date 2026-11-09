@@ -15,6 +15,7 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), Georgia, serif;
+  --font-score: var(--font-barlow), "Arial Narrow", sans-serif;
 }
 
 @layer base {
@@ -29,5 +30,42 @@
   }
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-floodlight;
+  }
+}
+
+/* Bars that grow once on mount (components/grow-on-mount.tsx), and on width changes. */
+@media (prefers-reduced-motion: no-preference) {
+  .grow-bar {
+    transition: width 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .grow-scope:not([data-ready]) .grow-bar {
+    width: 0 !important;
+  }
+}
+
+/* Home fixture ticker: the list twice in one track, scrolled by half its width. */
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker-track {
+  animation: ticker 60s linear infinite;
+}
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track,
+.ticker[data-paused] .ticker-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-copy,
+  .ticker-toggle {
+    display: none;
+  }
+  .ticker-viewport {
+    overflow-x: auto;
   }
 }
