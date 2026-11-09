@@ -15,6 +15,7 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), Georgia, serif;
+  --font-score: var(--font-barlow), "Arial Narrow", sans-serif;
 }
 
 @layer base {

@@ -1,9 +1,11 @@
+import { Wordmark } from "@/components/brand/arena-mark";
 import { GITHUB_URL } from "@/lib/site";
 
 export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-line">
       <div className="mx-auto max-w-6xl space-y-1 px-4 py-6 text-sm text-mist sm:px-6">
+        <Wordmark className="mb-3 text-starlight" />
         <p>Independent fan project. Not affiliated with UEFA or any club.</p>
         <p>
           Match data from{" "}

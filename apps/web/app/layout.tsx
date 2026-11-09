@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Barlow_Condensed, Fraunces, Inter } from "next/font/google";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -19,6 +19,13 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
+// Scoreboard numbers, hero team names and the wordmark (the --font-score theme token).
+const barlow = Barlow_Condensed({
+  variable: "--font-barlow",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   ...ROOT_METADATA,
@@ -28,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${inter.variable} ${barlow.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <a
