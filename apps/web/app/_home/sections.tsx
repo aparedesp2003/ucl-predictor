@@ -21,6 +21,7 @@ import {
   tickerOutcomes,
 } from "@/lib/data/home";
 import { getSeasonMatches } from "@/lib/data/matches";
+import { gainHeadline } from "@/lib/data/scorecard";
 import { getTitleRace } from "@/lib/data/odds";
 import { safely } from "@/lib/data/safe";
 import type { TitleOdds } from "@/lib/data/types";
@@ -382,8 +383,8 @@ export async function ReportCard() {
           </p>
           <p className="mt-3 max-w-[40ch] text-mist">
             favourites came through. Log loss {card.logLoss.toFixed(3)},{" "}
-            {formatPct(Math.abs(card.gain), 1)}{" "}
-            {card.gain >= 0 ? "better" : "worse"} than guessing.
+            {gainHeadline(card.gain).value} {gainHeadline(card.gain).word} than
+            guessing.
           </p>
           <p className="mt-3">
             <Link href="/accuracy" className={inlineLink}>

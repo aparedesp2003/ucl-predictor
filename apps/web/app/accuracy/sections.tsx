@@ -14,6 +14,7 @@ import { safely } from "@/lib/data/safe";
 import {
   backtestGainBars,
   callNote,
+  formatGain,
   gainHeadline,
   hitSummary,
   landedCalls,
@@ -460,7 +461,7 @@ export async function BacktestSection() {
                     b.isPrimary && "text-floodlight",
                   )}
                 >
-                  {formatPct(b.gain, 1)}
+                  {formatGain(b.gain)}
                 </span>
               </li>
             ))}

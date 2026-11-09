@@ -9,6 +9,7 @@ import {
   backtestGainBars,
   callNote,
   filterPredictions,
+  formatGain,
   gainHeadline,
   hitSummary,
   landedCalls,
@@ -97,6 +98,33 @@ describe("season headline", () => {
       value: "30.9%",
       word: "better",
     });
+  });
+
+  it("shows a tie with guessing as 0.0%, never -0.0%", () => {
+    const tie = seasonGain(Math.log(3)); // 1 − ln3/ln3, may land on -0 or a tiny float
+    expect(formatGain(tie)).toBe("0.0%");
+    expect(formatGain(-0)).toBe("0.0%");
+    expect(formatGain(-0.0004)).toBe("0.0%");
+    expect(formatGain(-0.0006)).toBe("-0.1%");
+    expect(gainHeadline(-0.0004)).toEqual({ value: "0.0%", word: "better" });
+  });
+
+  it("formats the guessing bar in the backtest as 0.0%", () => {
+    const bars = backtestGainBars([
+      {
+        model: "uniform",
+        role: "baseline",
+        scope: "overall",
+        n: 753,
+        logLoss: Math.log(3),
+        rps: 0.25,
+        brier: 0.67,
+        accuracy: 0.49,
+        isPrimary: false,
+      },
+    ]);
+    expect(formatGain(bars[0].gain)).toBe("0.0%");
+    expect(Object.is(bars[0].gain, -0)).toBe(false);
   });
 
   it("says worse than guessing honestly", () => {

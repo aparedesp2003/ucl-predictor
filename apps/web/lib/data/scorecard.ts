@@ -24,11 +24,22 @@ export function seasonGain(logLoss: number): number {
   return 1 - logLoss / LN3;
 }
 
+/** A gain that would display as zero is zero: no "-0.0%", and no "worse" for a tie with guessing. */
+export function normalizeGain(gain: number): number {
+  return Math.abs(gain) < 0.0005 ? 0 : gain;
+}
+
+/** A gain to one decimal, e.g. "14.0%", "0.0%", "-2.3%". */
+export function formatGain(gain: number): string {
+  return formatPct(normalizeGain(gain), 1);
+}
+
 /** "26.1%" plus "better" or "worse": the honest wording either way. */
-export function gainHeadline(gain: number): {
+export function gainHeadline(rawGain: number): {
   value: string;
   word: "better" | "worse";
 } {
+  const gain = normalizeGain(rawGain);
   return {
     value: formatPct(Math.abs(gain), 1),
     word: gain >= 0 ? "better" : "worse",
@@ -277,7 +288,7 @@ export type GainBar = {
 /** Gain over guessing per model on the whole test set: candidates first (best first), then baselines. */
 export function backtestGainBars(rows: BacktestRow[]): GainBar[] {
   const overall = rows.filter((r) => r.scope === "overall");
-  const gain = (r: BacktestRow) => seasonGain(r.logLoss);
+  const gain = (r: BacktestRow) => normalizeGain(seasonGain(r.logLoss));
   const byGain = (a: BacktestRow, b: BacktestRow) => gain(b) - gain(a);
   const ordered = [
     ...overall.filter((r) => r.role === "candidate").sort(byGain),
