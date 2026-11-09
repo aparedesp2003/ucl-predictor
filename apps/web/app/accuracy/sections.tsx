@@ -247,8 +247,8 @@ export async function BacktestSection() {
           {BACKTEST_VARIANTS_NOTE}
         </p>
 
-        <details className="mt-4 text-sm">
-          <summary className="cursor-pointer text-floodlight">
+        <details className="mt-2 text-sm">
+          <summary className="cursor-pointer py-2 text-floodlight">
             Log loss by test season
           </summary>
           <div
