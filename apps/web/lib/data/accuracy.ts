@@ -52,12 +52,14 @@ export async function getScoredPredictions(
     kickoff: r.kickoffUtc?.toISOString() ?? `${r.matchDate}T00:00:00.000Z`,
     home: {
       id: r.homeTeamId,
+      fdId: r.homeFdTeamId,
       name: r.homeName,
       shortName: r.homeShortName,
       tla: r.homeTla,
     },
     away: {
       id: r.awayTeamId,
+      fdId: r.awayFdTeamId,
       name: r.awayName,
       shortName: r.awayShortName,
       tla: r.awayTla,

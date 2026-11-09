@@ -28,7 +28,13 @@ export async function getTitleRace(): Promise<TitleRace | null> {
     runCreatedAt: first.runCreatedAt.toISOString(),
     resultsThrough: first.resultsThrough,
     teams: rows.map((r) => ({
-      team: { id: r.teamId, name: r.name, shortName: r.shortName, tla: r.tla },
+      team: {
+        id: r.teamId,
+        fdId: r.fdTeamId,
+        name: r.name,
+        shortName: r.shortName,
+        tla: r.tla,
+      },
       pTop8: r.pTop8,
       pPlayoff: r.pPlayoff,
       pOut: r.pOut,

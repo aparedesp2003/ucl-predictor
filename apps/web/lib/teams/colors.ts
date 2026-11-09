@@ -95,3 +95,40 @@ export function clashColors(
   const clash = rgbDistance(h.primary, a.primary) < CLASH_DISTANCE;
   return { home: h.primary, away: clash ? a.secondary : a.primary };
 }
+
+export function luminance(hex: string): number {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Prefer the club's text colour (onPrimary on the primary, the primary on the secondary) when it
+// reaches WCAG AA for small text (4.5:1); otherwise pure black or white, whichever contrasts more
+// (one of them always reaches about 4.58:1).
+export function bestText(background: string, preferred: string): string {
+  if (contrastRatio(background, preferred) >= 4.5) return preferred;
+  return contrastRatio(background, "#FFFFFF") >=
+    contrastRatio(background, "#000000")
+    ? "#FFFFFF"
+    : "#000000";
+}
+
+/** WCAG contrast ratio between two hex colours (1 to 21). */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Badge background and text; `background` overrides the primary (e.g. the away side's clash colour). */
+export function badgeColors(
+  team: TeamLike,
+  background?: string,
+): { background: string; text: string } {
+  const colors = teamColors(team);
+  const bg = background ?? colors.primary;
+  const preferred = bg === colors.primary ? colors.onPrimary : colors.primary;
+  return { background: bg, text: bestText(bg, preferred) };
+}
