@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 };
 
 const h2 = "mt-12 font-display text-2xl font-semibold";
-const link = "text-floodlight hover:underline";
+const link =
+  "text-floodlight underline decoration-floodlight/40 underline-offset-2 hover:decoration-floodlight";
 
 export default function AboutPage() {
   return (
