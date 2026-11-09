@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-
-import { pageMetadata } from "@/lib/site";
 import { Suspense } from "react";
 
 import { LoadingBlock, Skeleton } from "@/components/skeleton";
+import { pageMetadata } from "@/lib/site";
 
-import { BacktestSection, Headline, LiveTable, Predictions } from "./sections";
+import {
+  BacktestSection,
+  Hero,
+  LandedAndUpsets,
+  MatchdayTiles,
+  ModelLanes,
+  Predictions,
+} from "./sections";
 
 export const metadata: Metadata = pageMetadata({
   title: "Accuracy",
@@ -14,14 +20,22 @@ export const metadata: Metadata = pageMetadata({
   path: "/accuracy",
 });
 
-const sectionTitle = "font-display text-2xl font-semibold";
+const h2 = "font-display text-3xl font-semibold";
 
-function RowsSkeleton({ rows, label }: { rows: number; label: string }) {
+function Blocks({
+  label,
+  count,
+  className,
+}: {
+  label: string;
+  count: number;
+  className: string;
+}) {
   return (
     <LoadingBlock label={label}>
-      <div className="space-y-2">
-        {Array.from({ length: rows }, (_, i) => (
-          <Skeleton key={i} className="h-9" />
+      <div className="space-y-3">
+        {Array.from({ length: count }, (_, i) => (
+          <Skeleton key={i} className={className} />
         ))}
       </div>
     </LoadingBlock>
@@ -30,81 +44,92 @@ function RowsSkeleton({ rows, label }: { rows: number; label: string }) {
 
 export default function AccuracyPage() {
   return (
-    <main id="main" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <p className="text-sm font-medium tracking-wide text-floodlight uppercase">
-        Accuracy
-      </p>
+    <main id="main" className="mx-auto max-w-6xl space-y-20 px-4 py-12 sm:px-6">
       <Suspense
         fallback={
-          <LoadingBlock label="Loading this season's score">
-            <Skeleton className="mt-2 h-12 w-full max-w-xl" />
-            <Skeleton className="mt-3 h-5 w-full max-w-md" />
+          <LoadingBlock label="Loading this season's scorecard">
+            <Skeleton className="h-5 w-56" />
+            <Skeleton className="mt-4 h-32 w-full max-w-xl" />
+            <Skeleton className="mt-4 h-6 w-full max-w-lg" />
           </LoadingBlock>
         }
       >
-        <Headline />
+        <Hero />
       </Suspense>
 
-      <div className="mt-6 max-w-[70ch] space-y-2 text-sm text-mist">
-        <p>
-          <span className="font-medium text-silver">Log loss</span> measures how
-          surprised the model was by what actually happened; lower is better,
-          and guessing a third for each outcome scores 1.099.
-        </p>
-        <p>
-          <span className="font-medium text-silver">RPS</span> (ranked
-          probability score) measures how far the home, draw and away split was
-          from the result, counting a near miss as less wrong than a far one;
-          lower is better.
-        </p>
-      </div>
-
-      <section aria-labelledby="live" className="mt-12">
-        <h2 id="live" className={sectionTitle}>
-          This season
+      <section aria-labelledby="surprise">
+        <h2 id="surprise" className={h2}>
+          How surprised was each model?
         </h2>
-        <p className="mt-1 mb-5 text-sm text-mist">
-          Only predictions saved before kick-off count, scored on the 90-minute
-          result.
+        <p className="mt-2 mb-6 max-w-[65ch] text-mist">
+          Log loss measures how surprised a model was by what actually happened:
+          a shorter bar means a sharper model, and guessing a third each scores
+          1.099.
         </p>
         <Suspense
-          fallback={<RowsSkeleton rows={4} label="Loading live scores" />}
+          fallback={
+            <Blocks label="Loading live scores" count={3} className="h-10" />
+          }
         >
-          <LiveTable />
+          <ModelLanes />
         </Suspense>
       </section>
 
-      <section aria-labelledby="every" className="mt-14">
-        <h2 id="every" className={sectionTitle}>
-          Every prediction
+      <section aria-labelledby="matchdays">
+        <h2 id="matchdays" className={h2}>
+          Matchday by matchday
         </h2>
-        <p className="mt-1 mb-5 text-sm text-mist">
-          The primary model&apos;s call for each finished match, newest first. A
-          hit means the outcome it rated most likely happened.
+        <p className="mt-2 mb-6 max-w-[65ch] text-mist">
+          How many favourites came through in each league-phase matchday.
         </p>
         <Suspense
-          fallback={<RowsSkeleton rows={8} label="Loading predictions" />}
+          fallback={
+            <LoadingBlock label="Loading matchdays">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(7.5rem,1fr))] gap-3">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <Skeleton key={i} className="h-32 rounded-xl" />
+                ))}
+              </div>
+            </LoadingBlock>
+          }
+        >
+          <MatchdayTiles />
+        </Suspense>
+      </section>
+
+      <Suspense fallback={null}>
+        <LandedAndUpsets />
+      </Suspense>
+
+      <section aria-labelledby="every">
+        <h2 id="every" className={h2}>
+          Every prediction
+        </h2>
+        <p className="mt-2 mb-6 max-w-[65ch] text-mist">
+          The main model&apos;s call for each finished match, newest first. A
+          hit means the outcome it rated most likely happened, on the 90-minute
+          result.
+        </p>
+        <Suspense
+          fallback={
+            <Blocks
+              label="Loading predictions"
+              count={4}
+              className="h-36 rounded-xl"
+            />
+          }
         >
           <Predictions />
         </Suspense>
       </section>
 
-      <section aria-labelledby="backtest" className="mt-14">
-        <h2 id="backtest" className={sectionTitle}>
-          Backtest, 2021-22 to 2025-26
-        </h2>
-        <p className="mt-1 mb-5 max-w-[70ch] text-sm text-mist">
-          Before the season, each candidate model predicted five past seasons it
-          had not been tuned on. The primary model is the one with the lowest
-          log loss on earlier validation seasons, kept only if it does no worse
-          than plain Elo here.
-        </p>
-        <Suspense
-          fallback={<RowsSkeleton rows={7} label="Loading backtest results" />}
-        >
-          <BacktestSection />
-        </Suspense>
-      </section>
+      <Suspense
+        fallback={
+          <Blocks label="Loading backtest results" count={7} className="h-7" />
+        }
+      >
+        <BacktestSection />
+      </Suspense>
     </main>
   );
 }

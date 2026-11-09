@@ -26,7 +26,7 @@ export function CalibrationChart({
   if (!bins) {
     return (
       <figure>
-        <figcaption className="mb-3 font-medium text-silver">
+        <figcaption className="mb-3 font-score text-xl font-semibold tracking-wide text-silver uppercase">
           {title}
         </figcaption>
         <EmptyState title="Not available">
@@ -51,13 +51,23 @@ export function CalibrationChart({
 
   return (
     <figure>
-      <figcaption className="mb-3 font-medium text-silver">{title}</figcaption>
+      <figcaption className="mb-3 font-score text-xl font-semibold tracking-wide text-silver uppercase">
+        {title}
+      </figcaption>
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         className="w-full max-w-[22rem] text-mist"
         role="img"
         aria-label={label}
       >
+        <rect
+          x={x(0)}
+          y={y(1)}
+          width={PLOT}
+          height={PLOT}
+          rx={6}
+          className="fill-midnight"
+        />
         {TICKS.map((t) => (
           <g key={t}>
             <line
@@ -101,9 +111,10 @@ export function CalibrationChart({
           y1={y(0)}
           x2={x(1)}
           y2={y(1)}
-          className="stroke-muted"
+          className="stroke-silver"
+          strokeOpacity={0.6}
           strokeWidth={1.5}
-          strokeDasharray="4 4"
+          strokeDasharray="5 5"
         />
         <text
           x={x(0.5)}
@@ -120,7 +131,7 @@ export function CalibrationChart({
           fontSize={11}
           fill="currentColor"
         >
-          Actually happened
+          How often it happened
         </text>
         {points.map((b) => (
           <g key={b.lo}>
