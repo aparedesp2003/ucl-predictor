@@ -7,12 +7,9 @@ import {
   getCurrentSeason,
   getScoredPredictions,
 } from "@/lib/data/accuracy";
-import {
-  formatPct,
-  improvementOverGuessing,
-  modelName,
-} from "@/lib/data/derive";
+import { formatPct, improvementOverGuessing } from "@/lib/data/derive";
 import { safely } from "@/lib/data/safe";
+import { BACKTEST_VARIANTS_NOTE, modelLabel } from "@/lib/models/labels";
 import { getScoreboard } from "@/lib/data/scoreboard";
 import type { BacktestRow } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
@@ -57,7 +54,7 @@ export async function Headline() {
         guessing
       </h1>
       <p className="mt-3 max-w-[70ch] text-mist">
-        The {modelName(primary.model)} model&apos;s log loss is{" "}
+        The {modelLabel(primary.model, "live")} model&apos;s log loss is{" "}
         {primary.logLoss.toFixed(3)}, against{" "}
         {primary.uniformLogLoss.toFixed(3)} for a third on each outcome, over{" "}
         {plural(primary.n, "match")} this season.
@@ -116,7 +113,7 @@ export async function LiveTable() {
             {scores.map((s) => (
               <tr key={s.model} className="border-b border-rowline">
                 <th scope="row" className="py-2 pr-3 text-left font-medium">
-                  {modelName(s.model)}
+                  {modelLabel(s.model, "live")}
                   {s.isPrimary ? <PrimaryTag /> : null}
                 </th>
                 <td className={td}>{s.n}</td>
@@ -246,6 +243,9 @@ export async function BacktestSection() {
           third to each outcome, base rates use how often home wins, draws and
           away wins happened in earlier seasons.
         </p>
+        <p className="mt-2 max-w-[70ch] text-xs text-mist">
+          {BACKTEST_VARIANTS_NOTE}
+        </p>
 
         <details className="mt-4 text-sm">
           <summary className="cursor-pointer text-floodlight">
@@ -280,7 +280,7 @@ export async function BacktestSection() {
                     )}
                   >
                     <th scope="row" className="py-2 pr-3 text-left font-medium">
-                      {modelName(r.model)}
+                      {modelLabel(r.model, "backtest")}
                     </th>
                     {seasons.map((s) => (
                       <td key={s} className={td}>
@@ -299,21 +299,21 @@ export async function BacktestSection() {
         <div>
           <h3 className="font-display text-xl font-semibold">Calibration</h3>
           <p className="mt-1 mb-5 max-w-[70ch] text-sm text-mist">
-            When the {modelName(backtest.calibration.model)} model said a side
-            had, say, a 40% chance, did that side win about 40% of the time?
-            Each dot is a group of test matches by predicted chance; dots on the
-            diagonal are perfectly calibrated, and bigger dots hold more
-            matches.
+            When the {modelLabel(backtest.calibration.model, "backtest")} model
+            said a side had, say, a 40% chance, did that side win about 40% of
+            the time? Each dot is a group of test matches by predicted chance;
+            dots on the diagonal are perfectly calibrated, and bigger dots hold
+            more matches.
           </p>
           <div className="grid gap-8 sm:grid-cols-2">
             <CalibrationChart
               title="Home win"
-              model={modelName(backtest.calibration.model)}
+              model={modelLabel(backtest.calibration.model, "backtest")}
               bins={backtest.calibration.home}
             />
             <CalibrationChart
               title="Away win"
-              model={modelName(backtest.calibration.model)}
+              model={modelLabel(backtest.calibration.model, "backtest")}
               bins={backtest.calibration.away}
             />
           </div>
@@ -328,7 +328,7 @@ function BacktestRowView({ row: r }: { row: BacktestRow }) {
   return (
     <tr className={cn("border-b border-rowline", baseline && "text-mist")}>
       <th scope="row" className="py-2 pr-3 text-left font-medium">
-        {modelName(r.model)}
+        {modelLabel(r.model, "backtest")}
         {r.isPrimary ? <PrimaryTag /> : null}
         {baseline ? (
           <span className="ml-2 text-xs font-normal">baseline</span>
