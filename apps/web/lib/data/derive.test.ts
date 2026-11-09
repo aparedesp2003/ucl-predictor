@@ -17,7 +17,7 @@ import {
 } from "./derive";
 import type { MatchRow, TitleOdds } from "./types";
 
-const team = { id: 1, name: "Team", shortName: null, tla: null };
+const team = { id: 1, fdId: null, name: "Team", shortName: null, tla: null };
 
 function match(over: Partial<MatchRow> = {}): MatchRow {
   return {

@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { GITHUB_URL } from "@/lib/site";
+import { GITHUB_URL, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About",
   description:
     "How the Champions League predictions are made, locked before kick-off and scored, where the data comes from, and what the model cannot know.",
-};
+  path: "/about",
+});
 
 const h2 = "mt-12 font-display text-2xl font-semibold";
-const link = "text-floodlight hover:underline";
+const link =
+  "text-floodlight underline decoration-floodlight/40 underline-offset-2 hover:decoration-floodlight";
 
 export default function AboutPage() {
   return (

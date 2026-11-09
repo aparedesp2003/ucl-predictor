@@ -1,5 +1,6 @@
 // Pure helpers over lib/data results (no I/O, unit-tested).
 import { LEAGUE_MATCHDAYS } from "@/lib/site";
+import { displayName } from "@/lib/teams/display";
 
 import type {
   MatchRow,
@@ -92,12 +93,8 @@ export function improvementOverGuessing(
   return (row.uniformLogLoss - row.logLoss) / row.uniformLogLoss;
 }
 
-export function teamName(team: {
-  name: string;
-  shortName: string | null;
-}): string {
-  return team.shortName ?? team.name;
-}
+/** The visitor-facing team name (lib/teams/display, falling back to the DB short name). */
+export const teamName = displayName;
 
 /** A one-line headline from the title odds; null when there are none. */
 export function titleHeadline(teams: TitleOdds[]): string | null {
@@ -120,20 +117,6 @@ export function formatPct(p: number, digits = 0): string {
   if (p < 1 && p * 100 >= top + 10 ** -digits / 2)
     return `>${top.toFixed(digits)}%`;
   return `${(p * 100).toFixed(digits)}%`;
-}
-
-const MODEL_NAMES: Record<string, string> = {
-  elo: "Elo",
-  poisson: "Poisson",
-  poisson_cal: "Poisson, calibrated",
-  poisson_shrink: "Poisson, shrunk",
-  blend: "Blend",
-  uniform: "Guessing",
-  historical: "Base rates",
-};
-
-export function modelName(model: string): string {
-  return MODEL_NAMES[model] ?? model;
 }
 
 /** A simulated probability: never "0%" or "100%", since a run that never happened is not impossible. */

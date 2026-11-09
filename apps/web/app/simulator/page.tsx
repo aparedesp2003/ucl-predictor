@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { pageMetadata } from "@/lib/site";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
@@ -9,11 +11,12 @@ import { safely } from "@/lib/data/safe";
 
 import { SimulatorTable } from "./simulator-table";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Season simulator",
   description:
     "Every club's chance of the top 8, the play-offs, each knockout round and the title, from thousands of simulated Champions League seasons.",
-};
+  path: "/simulator",
+});
 
 export default function SimulatorPage() {
   return (

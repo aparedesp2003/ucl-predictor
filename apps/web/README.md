@@ -2,7 +2,8 @@
 
 Next.js front end for the UCL predictor. It only **reads** the database, through five views that
 `apps/engine` creates (migrations `5c2e7a91d4b3_week5_web_views` and
-`e6a1c4d27f90_week6_web_accuracy_views`):
+`e6a1c4d27f90_week6_web_accuracy_views`; `f3d81a6c2b57_week7_web_views_fd_team_id` adds the
+football-data team ids):
 
 | View                    | What it holds                                                                 |
 | ----------------------- | ----------------------------------------------------------------------------- |
@@ -126,4 +127,10 @@ pnpm --filter web typecheck
 pnpm --filter web test            # Vitest
 pnpm --filter web build
 pnpm --filter web screenshots     # Playwright: needs the dev server on :3000; writes ./screenshots (gitignored)
+                                  #   also reports horizontal overflow and tap targets under 24x24 on phones
+pnpm --filter web screenshots:readme  # README images from the live site (BASE_URL to override) -> docs/screenshots
 ```
+
+Team names and badge codes come from `lib/teams/display.ts`, keyed by football-data team id, with
+the stored short name / TLA as fallback. Club colours stay in `lib/teams/colors.ts`, keyed by the
+stored TLA. Model labels come from `lib/models/labels.ts`.

@@ -13,13 +13,13 @@ import {
   isLocked,
   kickoffRange,
   leagueMatches,
-  modelName,
   teamName,
   titleHeadline,
 } from "@/lib/data/derive";
 import { getSeasonMatches } from "@/lib/data/matches";
 import { getTitleRace } from "@/lib/data/odds";
 import { safely } from "@/lib/data/safe";
+import { modelLabel } from "@/lib/models/labels";
 import { getScoreboard } from "@/lib/data/scoreboard";
 import type { MatchRow, Prediction, ScoreRow } from "@/lib/data/types";
 import { teamColors } from "@/lib/teams/colors";
@@ -115,7 +115,7 @@ function TrackRecord({ row }: { row: ScoreRow }) {
       <p className="text-sm text-mist">
         {gain >= 0 ? "lower" : "higher"} log loss than guessing, over {row.n}{" "}
         match
-        {row.n === 1 ? "" : "es"} scored ({modelName(row.model)} model)
+        {row.n === 1 ? "" : "es"} scored ({modelLabel(row.model, "live")} model)
       </p>
     </>
   );
@@ -262,7 +262,7 @@ export async function KeepingScore() {
           {sorted.map((s) => (
             <tr key={s.model} className="border-b border-rowline">
               <th scope="row" className="py-2 text-left font-medium">
-                {modelName(s.model)}
+                {modelLabel(s.model, "live")}
                 {s.isPrimary ? (
                   <span className="ml-2 text-xs font-normal text-mist">
                     primary

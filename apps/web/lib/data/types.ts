@@ -1,7 +1,8 @@
 // Plain, serialisable shapes returned by lib/data (safe to pass to client components).
 
 export type TeamRef = {
-  id: number;
+  id: number; // internal teams.id: differs between databases
+  fdId: number | null; // football-data team id: stable, keys lib/teams/display
   name: string;
   shortName: string | null;
   tla: string | null;

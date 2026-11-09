@@ -146,8 +146,8 @@ export function CalibrationChart({
         ))}
       </svg>
 
-      <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-floodlight">
+      <details className="mt-1 text-sm">
+        <summary className="cursor-pointer py-2 text-floodlight">
           {title} calibration as a table
         </summary>
         <table className="mt-2 w-full max-w-[22rem]">

@@ -32,12 +32,14 @@ export async function getSeasonMatches(): Promise<MatchRow[]> {
     awayGoals: r.awayGoals90,
     home: {
       id: r.homeTeamId,
+      fdId: r.homeFdTeamId,
       name: r.homeName,
       shortName: r.homeShortName,
       tla: r.homeTla,
     },
     away: {
       id: r.awayTeamId,
+      fdId: r.awayFdTeamId,
       name: r.awayName,
       shortName: r.awayShortName,
       tla: r.awayTla,

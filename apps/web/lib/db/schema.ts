@@ -1,5 +1,6 @@
 // Read-only mirror of the views apps/engine creates for the web (Alembic migrations
-// 5c2e7a91d4b3_week5_web_views and e6a1c4d27f90_week6_web_accuracy_views). They are the only
+// 5c2e7a91d4b3_week5_web_views and e6a1c4d27f90_week6_web_accuracy_views; the fd_team_id columns
+// come from f3d81a6c2b57_week7_web_views_fd_team_id). They are the only
 // relations the web role can read.
 // Hand-written and marked .existing(): never run drizzle-kit push/migrate/generate.
 import {
@@ -40,6 +41,8 @@ export const webMatchPredictions = pgView("web_match_predictions", {
   pAway: doublePrecision("p_away"),
   model: varchar("model", { length: 32 }),
   predictedAt: timestamp("predicted_at", { withTimezone: true }),
+  homeFdTeamId: integer("home_fd_team_id"),
+  awayFdTeamId: integer("away_fd_team_id"),
 }).existing();
 
 export const webTitleOdds = pgView("web_title_odds", {
@@ -61,6 +64,7 @@ export const webTitleOdds = pgView("web_title_odds", {
   nSims: integer("n_sims").notNull(),
   runCreatedAt: timestamp("run_created_at", { withTimezone: true }).notNull(),
   resultsThrough: date("results_through").notNull(),
+  fdTeamId: integer("fd_team_id"),
 }).existing();
 
 // avg() of an integer expression is numeric in Postgres; avg() of float8 stays float8.
@@ -108,6 +112,8 @@ export const webPredictionScores = pgView("web_prediction_scores", {
   brier: doublePrecision("brier").notNull(),
   hit: boolean("hit").notNull(),
   isPrimary: boolean("is_primary").notNull(),
+  homeFdTeamId: integer("home_fd_team_id"),
+  awayFdTeamId: integer("away_fd_team_id"),
 }).existing();
 
 // Calibration bins ({lo, hi, n, mean_pred, observed}) are only set on the 'overall' rows.

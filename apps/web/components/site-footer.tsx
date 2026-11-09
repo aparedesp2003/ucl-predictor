@@ -8,20 +8,23 @@ export function SiteFooter() {
         <p>
           Match data from{" "}
           <a
-            className="text-floodlight hover:underline"
+            className="text-floodlight underline decoration-floodlight/40 underline-offset-2 hover:decoration-floodlight"
             href="https://www.football-data.org/"
           >
             football-data.org
           </a>{" "}
           and{" "}
           <a
-            className="text-floodlight hover:underline"
+            className="text-floodlight underline decoration-floodlight/40 underline-offset-2 hover:decoration-floodlight"
             href="https://github.com/openfootball"
           >
             openfootball
           </a>
           . Source code on{" "}
-          <a className="text-floodlight hover:underline" href={GITHUB_URL}>
+          <a
+            className="text-floodlight underline decoration-floodlight/40 underline-offset-2 hover:decoration-floodlight"
+            href={GITHUB_URL}
+          >
             GitHub
           </a>
           .

@@ -3,7 +3,7 @@ import { Fraunces, Inter } from "next/font/google";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/site";
+import { ROOT_METADATA, siteUrl } from "@/lib/site";
 
 import "./globals.css";
 
@@ -21,11 +21,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
-  title: {
-    default: `${SITE_NAME}: Champions League predictions`,
-    template: `%s · ${SITE_NAME}`,
-  },
-  description: SITE_DESCRIPTION,
+  ...ROOT_METADATA,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
