@@ -11,6 +11,7 @@ import {
   boldestCalls,
   closestCall,
   favouriteSide,
+  heroBarColors,
   lastCompletedMatchday,
   matchdayFixtures,
   nextMatchday,
@@ -31,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { Race } from "./race";
 import { Ticker, type TickerItem } from "./ticker";
 
-const DRAW = "#3A4472";
 const MISS = "#F5A35C";
 const sectionTitle = "font-display text-2xl font-semibold";
 const inlineLink =
@@ -118,6 +118,7 @@ function ClosestCall({
   matchday: number;
 }) {
   const colors = clashColors(m.home, m.away);
+  const bars = heroBarColors(m.home, m.away);
   const homeText = badgeColors(m.home, colors.home).text;
   const awayText = badgeColors(m.away, colors.away).text;
   const home = teamName(m.home);
@@ -137,9 +138,9 @@ function ClosestCall({
     },
   ];
   const segments = [
-    { value: p.pHome, color: colors.home },
-    { value: p.pDraw, color: DRAW },
-    { value: p.pAway, color: colors.away },
+    { value: p.pHome, color: bars[0] },
+    { value: p.pDraw, color: bars[1] },
+    { value: p.pAway, color: bars[2] },
   ];
 
   return (

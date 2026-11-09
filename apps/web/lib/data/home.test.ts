@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { TEAM_COLORS } from "@/lib/teams/colors";
+import {
+  contrastRatio,
+  SURFACE_NIGHT,
+  SURFACE_TRACK,
+  TEAM_COLORS,
+} from "@/lib/teams/colors";
 
 import {
   boldestCalls,
@@ -8,7 +13,9 @@ import {
   countdownLabel,
   countdownParts,
   favouriteSide,
+  DRAW_BAR,
   formatRacePct,
+  heroBarColors,
   lastCompletedMatchday,
   matchdayFixtures,
   nextMatchday,
@@ -363,5 +370,31 @@ describe("countdown", () => {
     expect(countdownLabel(59 * MIN + 30_000)).toBe("59 minutes to kick-off");
     expect(countdownLabel(61 * MIN)).toBe("1 hour 1 minute to kick-off");
     expect(countdownLabel(0)).toBe("Kicked off, prediction locked");
+  });
+});
+
+describe("bar contrast (WCAG 1.4.11)", () => {
+  it("draws Fenerbahçe in yellow in the hero bar", () => {
+    // Shakhtar orange vs Fenerbahçe navy do not clash, but navy is too dark on the night card.
+    expect(
+      heroBarColors(team("SHD", "Shakhtar"), team("FEN", "Fenerbahçe")),
+    ).toEqual([TEAM_COLORS.SHD.primary, DRAW_BAR, "#FFED00"]);
+  });
+
+  it("keeps the draw segment at 3:1 on the card", () => {
+    expect(contrastRatio(DRAW_BAR, SURFACE_NIGHT)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("draws Man City in sky blue in the race, even below a clashing colour", () => {
+    // Under Liverpool's teal the clash rule picks City's navy secondary, which fails on the track;
+    // the passing sky-blue primary wins over the clash.
+    const colors = raceColors([team("LIV"), team("MCI")]);
+    expect(colors[1]).toBe("#6CABDD");
+  });
+
+  it("gives every race bar 3:1 against the track", () => {
+    const tlas = Object.keys(TEAM_COLORS).filter((t) => t !== "BAR");
+    for (const c of raceColors(tlas.map((t) => team(t))))
+      expect(contrastRatio(c, SURFACE_TRACK)).toBeGreaterThanOrEqual(3);
   });
 });
