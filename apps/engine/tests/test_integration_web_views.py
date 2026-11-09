@@ -30,6 +30,7 @@ SEASON = "2999-00"  # sorts after every real season, so it is the "current" one 
 PRIMARY = "test_web_a"
 OTHER = "test_web_b"
 FUTURE = datetime(2100, 1, 1, 20, tzinfo=UTC)  # created_at = now() is then before kick-off
+FD_IDS = {"A": 990_000_001, "B": 990_000_002, "C": 990_000_003}  # no real football-data id
 
 
 @pytest.fixture
@@ -55,7 +56,11 @@ def data(conn) -> dict:
         .returning(Season.id)
     )
     a, b, c = (
-        conn.scalar(insert(Team).values(name=f"Test {x}", tla=f"T{x}").returning(Team.id))
+        conn.scalar(
+            insert(Team)
+            .values(name=f"Test {x}", tla=f"T{x}", fd_team_id=FD_IDS[x])
+            .returning(Team.id)
+        )
         for x in "ABC"
     )
     primary_run = create_model_run(conn, ModelRunKind.PREDICT, {}, None, None, model=PRIMARY)
@@ -116,6 +121,7 @@ def test_match_predictions(conn, data):
     assert (hit.p_home, hit.p_draw, hit.p_away, hit.model) == (0.5, 0.3, 0.2, PRIMARY)
     assert (hit.home_goals_90, hit.away_goals_90, hit.status) == (2, 1, "FINISHED")
     assert (hit.home_tla, hit.away_tla, hit.stage, hit.matchday) == ("TA", "TB", "LEAGUE_PHASE", 1)
+    assert (hit.home_fd_team_id, hit.away_fd_team_id) == (FD_IDS["A"], FD_IDS["B"])
     assert hit.predicted_at is not None
     miss = rows[data["unpredicted"]]
     assert (miss.p_home, miss.p_draw, miss.p_away, miss.model, miss.predicted_at) == (None,) * 5
@@ -134,6 +140,7 @@ def test_title_odds_latest_run_of_current_season(conn, data):
     }
     assert {r.results_through for r in rows} == {date(2099, 2, 1)}
     assert all(r.run_created_at is not None for r in rows)
+    assert {r.fd_team_id for r in rows} == {FD_IDS["A"], FD_IDS["B"]}
 
 
 def test_model_scoreboard_is_primary(conn, data):
