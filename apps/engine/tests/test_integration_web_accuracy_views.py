@@ -34,6 +34,7 @@ PRIMARY = "test_acc_a"
 OTHER = "test_acc_b"
 FUTURE = datetime(2100, 1, 1, 20, tzinfo=UTC)  # created_at = now() is then before kick-off
 PAST = datetime(2000, 1, 1, 20, tzinfo=UTC)  # a prediction made now is after kick-off
+FD_IDS = {"A": 990_000_011, "B": 990_000_012}  # no real football-data id
 # Shared with apps/web/lib/data/derive.test.ts: both hit definitions must agree on these cases.
 HIT_CASES = json.loads((Path(__file__).parent / "fixtures" / "hit_cases.json").read_text("utf-8"))
 OUTCOME = {"H": 0, "D": 1, "A": 2}
@@ -65,7 +66,11 @@ def data(conn) -> dict:
         for label in (SEASON, OLD_SEASON)
     )
     a, b = (
-        conn.scalar(insert(Team).values(name=f"Test {x}", tla=f"T{x}").returning(Team.id))
+        conn.scalar(
+            insert(Team)
+            .values(name=f"Test {x}", tla=f"T{x}", fd_team_id=FD_IDS[x])
+            .returning(Team.id)
+        )
         for x in "AB"
     )
     primary_run = create_model_run(conn, ModelRunKind.PREDICT, {}, None, None, model=PRIMARY)
@@ -125,6 +130,7 @@ def test_prediction_scores_match_python_metrics(conn, data):
         assert (r.home_tla, r.away_tla, r.home_name, r.stage) == (
             "TA", "TB", "Test A", "LEAGUE_PHASE"
         )  # fmt: skip
+        assert (r.home_fd_team_id, r.away_fd_team_id) == (FD_IDS["A"], FD_IDS["B"])
         assert r.is_primary is True
 
 
