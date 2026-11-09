@@ -1,4 +1,4 @@
-# Matchcast — UEFA Champions League predictor
+# Ninety — Champions League predictor
 
 Pre-kick-off win/draw/loss probabilities for every Champions League match, a Monte Carlo simulation
 of the whole season, and a public scorecard that grades every prediction once the match is played.
@@ -6,9 +6,9 @@ of the whole season, and a public scorecard that grades every prediction once th
 **Live site: [ucl-predictor-red.vercel.app](https://ucl-predictor-red.vercel.app)**
 
 <p>
-  <img src="docs/screenshots/home-1440.png" alt="Matchcast home page on desktop: the title favourite, the biggest calls of the matchday and the live scorecard" width="72%">
+  <img src="docs/screenshots/home-1440.png" alt="Ninety home page on desktop: the next matchday's fixture ticker, the closest call with a countdown, the boldest calls and the race for the trophy" width="72%">
   &nbsp;
-  <img src="docs/screenshots/home-390.png" alt="Matchcast home page on a phone" width="22%">
+  <img src="docs/screenshots/home-390.png" alt="Ninety home page on a phone" width="22%">
 </p>
 
 More screenshots: [matches](docs/screenshots/matches-1440.png) ·
