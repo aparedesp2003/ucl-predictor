@@ -132,3 +132,26 @@ export function badgeColors(
   const preferred = bg === colors.primary ? colors.onPrimary : colors.primary;
   return { background: bg, text: bestText(bg, preferred) };
 }
+
+// Bars and bar segments are graphical objects: WCAG 1.4.11 asks for 3:1 against the surface
+// behind them.
+export const SURFACE_NIGHT = "#070B24"; // page and hero card
+export const SURFACE_TRACK = "#0E1540"; // race lanes (midnight)
+export const BAR_FALLBACK = "#C9D1E3"; // silver
+export const MIN_BAR_CONTRAST = 3;
+
+/**
+ * A team's bar colour on `surface`: the chosen colour when it reaches 3:1, otherwise the team's
+ * other colour (primary <-> secondary), otherwise silver. Apply after the clash rule.
+ */
+export function barColor(
+  team: TeamLike,
+  chosen: string,
+  surface: string,
+): string {
+  if (contrastRatio(chosen, surface) >= MIN_BAR_CONTRAST) return chosen;
+  const c = teamColors(team);
+  const other = chosen === c.primary ? c.secondary : c.primary;
+  if (contrastRatio(other, surface) >= MIN_BAR_CONTRAST) return other;
+  return BAR_FALLBACK;
+}

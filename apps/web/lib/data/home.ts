@@ -1,5 +1,13 @@
 // Pure helpers for the Home page (no I/O, unit-tested in home.test.ts).
-import { CLASH_DISTANCE, rgbDistance, teamColors } from "@/lib/teams/colors";
+import {
+  barColor,
+  CLASH_DISTANCE,
+  clashColors,
+  rgbDistance,
+  SURFACE_NIGHT,
+  SURFACE_TRACK,
+  teamColors,
+} from "@/lib/teams/colors";
 
 import {
   biggestCalls,
@@ -123,20 +131,41 @@ export function raceTop(
 
 /**
  * Bar colours down the race: each team's primary, except that a team switches to its secondary when
- * its primary clashes with the colour shown on the row above (the same rule as clashColors).
+ * its primary clashes with the colour shown on the row above (the same rule as clashColors). Then
+ * every bar must reach 3:1 against the track (barColor): if the clash choice fails, the passing
+ * colour wins even when it clashes with the row above; if neither passes, silver.
  */
-export function raceColors(teams: Pick<TeamRef, "tla" | "name">[]): string[] {
+export function raceColors(
+  teams: Pick<TeamRef, "tla" | "name">[],
+  surface: string = SURFACE_TRACK,
+): string[] {
   const out: string[] = [];
   for (const team of teams) {
     const c = teamColors(team);
     const above = out[out.length - 1];
-    out.push(
+    const chosen =
       above && rgbDistance(above, c.primary) < CLASH_DISTANCE
         ? c.secondary
-        : c.primary,
-    );
+        : c.primary;
+    out.push(barColor(team, chosen, surface));
   }
   return out;
+}
+
+// The theme's draw colour (#3A4472) is only 2.1:1 on the hero card; this neutral reaches 3.5:1.
+export const DRAW_BAR = "#5B6694";
+
+/** Hero bar segments (home, draw, away) on the night card: the clash rule, then 3:1 contrast. */
+export function heroBarColors(
+  home: Pick<TeamRef, "tla" | "name">,
+  away: Pick<TeamRef, "tla" | "name">,
+): [string, string, string] {
+  const c = clashColors(home, away);
+  return [
+    barColor(home, c.home, SURFACE_NIGHT),
+    DRAW_BAR,
+    barColor(away, c.away, SURFACE_NIGHT),
+  ];
 }
 
 /** ">99%" and "<1%" at the ends, one decimal under 10%, whole numbers otherwise. */
