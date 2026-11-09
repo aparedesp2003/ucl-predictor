@@ -50,8 +50,10 @@ export async function Headline() {
   return (
     <>
       <h1 className="mt-2 font-display text-4xl leading-tight font-semibold sm:text-5xl">
-        {formatPct(Math.abs(gain), 1)} {gain >= 0 ? "better" : "worse"} than
-        guessing
+        <span className="font-score text-[1.2em] font-bold">
+          {formatPct(Math.abs(gain), 1)}
+        </span>{" "}
+        {gain >= 0 ? "better" : "worse"} than guessing
       </h1>
       <p className="mt-3 max-w-[70ch] text-mist">
         The {modelLabel(primary.model, "live")} model&apos;s log loss is{" "}
